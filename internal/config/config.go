@@ -1,15 +1,17 @@
 package config
 
 type Api struct {
-	AppName        string         `split_words:"true" default:"cogi-go api v1"`
-	LogLevel       string         `split_words:"true" default:"DEBUG"`
-	MainHost       string         `split_words:"true" default:"localhost"`
-	MainPort       int            `split_words:"true" default:"8080"`
-	HealthPort     int            `split_words:"true" default:"8083"`
+	AppName    string `split_words:"true" default:"cogi-go api v1"`
+	LogLevel   string `split_words:"true" default:"DEBUG"`
+	MainHost   string `split_words:"true" default:"localhost"`
+	MainPort   int    `split_words:"true" default:"8080"`
+	HealthPort int    `split_words:"true" default:"8083"`
 }
 
 func LoadApiConfig() *Api {
-	var cfg Api
+	var cfg Api = Api{
+		AppName:    "cogi-go api v1",
+	}
 	return &cfg
 }
 

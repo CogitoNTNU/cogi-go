@@ -14,12 +14,12 @@ import (
 func InitDb(e *env.EnvConfig, logger *logrus.Entry, ctx context.Context) (db *sqlx.DB, err error) {
 	var sqlDb *sql.DB
 
-	switch e.ReadFromEnv("MODE") {
+	switch e.Read("ENVRONMENT") {
 	case env.DEV:
-		cfg := config.NewLocalDbConfig(config.WithDbUser("sa"), config.WithDbPassword("p2precurring!"), config.WithDbName("DatabaseProjectP2PRecurringDB"))
-		sqlDb, err = ConnectDb(ctx, logger, cfg)
+		cfg := config.NewLocalDbConfig(config.WithDbUser("postgres"), config.WithDbPassword("postgres"), config.WithDbName("master"))
+		sqlDb, err = connectDb(ctx, logger, cfg)
 	case env.PROD:
-		// Todo implement PROD db
+	// TODO: implement PROD db
 	default:
 		return nil, errors.New("unknown environment mode")
 	}
@@ -28,7 +28,7 @@ func InitDb(e *env.EnvConfig, logger *logrus.Entry, ctx context.Context) (db *sq
 	return
 }
 
-func ConnectDb[T config.SQLConfig](ctx context.Context, logger *logrus.Entry, cfg T) (db *sql.DB, err error) {
+func connectDb[T config.SQLConfig](ctx context.Context, logger *logrus.Entry, cfg T) (db *sql.DB, err error) {
 	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;database=%s", cfg.GetSQLHost(), cfg.GetSQLUser(), cfg.GetSQLPassword(), cfg.GetSQLPort(), cfg.GetSQLDatabase())
 	db, err = sql.Open("sqlserver", connString)
 

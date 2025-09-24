@@ -13,6 +13,7 @@ var (
 
 type EnvConfig struct {
 	env_path string
+  logger *logrus.Logger
 }
 
 func Configure(path string) *EnvConfig {
@@ -20,7 +21,7 @@ func Configure(path string) *EnvConfig {
 }
 
 func (p *EnvConfig) Read(key string) (value string) {
-	logger := logrus.New()
+	logger := p.logger
 	viper.SetConfigFile(p.env_path)
 	err := viper.ReadInConfig()
 
