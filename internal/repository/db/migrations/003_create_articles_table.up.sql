@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS articles (
+    article_id serial PRIMARY KEY,
+    content JSONB NOT NULL,
+    author_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+    project_id INT REFERENCES projects(project_id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
