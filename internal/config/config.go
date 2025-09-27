@@ -1,5 +1,9 @@
 package config
 
+import (
+	"github.com/kelseyhightower/envconfig"
+)
+
 type Api struct {
 	AppName    string `split_words:"true" default:"cogi-go api v1"`
 	LogLevel   string `split_words:"true" default:"DEBUG"`
@@ -10,7 +14,7 @@ type Api struct {
 
 func LoadApiConfig() *Api {
 	var cfg Api = Api{
-		AppName:    "cogi-go api v1",
+		AppName: "cogi-go api v1",
 	}
 	return &cfg
 }
@@ -26,9 +30,18 @@ type LocalDbConfig struct {
 func NewLocalDbConfig(options ...LocalDbOption) *LocalDbConfig {
 	var localDbCfg LocalDbConfig
 
+	localDbCfg.loadDefault()
+
 	for _, option := range options {
 		option(&localDbCfg)
 	}
 
 	return &localDbCfg
+}
+
+func (c *LocalDbConfig) loadDefault() (*LocalDbConfig, error) {
+	if err := envconfig.Process("", &c); err != nil {
+		return c, err
+	}
+	return c, nil
 }
