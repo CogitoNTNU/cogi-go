@@ -17,5 +17,5 @@ CREATE TABLE IF NOT EXISTS users(
    password_hash VARCHAR (300) NOT NULL,
    avatar VARCHAR (300),
    image_permission TIMESTAMP,
-   allergy_info TEXT[]
+   food_preference TEXT[]
 );
