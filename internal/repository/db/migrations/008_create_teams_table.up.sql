@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS teams (
 );
 
 CREATE TABLE IF NOT EXISTS project_teams (
-    project_id INT REFERENCES projects(project_id) ON DELETE CASCADE
+    project_id INT REFERENCES projects(project_id) ON DELETE CASCADE NOT NULL
 ) INHERITS (teams);
 
 CREATE TABLE IF NOT EXISTS administrasjon_teams (
