@@ -13,21 +13,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func InitDb(e *env.EnvConfig, logger *logrus.Entry, ctx context.Context) (db *sqlx.DB, err error) {
-	var sqlDb *sql.DB
-
+func InitDb(e *env.EnvConfig, logger *logrus.Entry, ctx context.Context) (db *sql.DB, err error) {
 	switch e.Read("ENVIRONMENT") {
 	case env.DEV:
 		cfg := config.NewLocalDbConfig(config.WithDbHost("localhost"), config.WithDbPort(5432), config.WithDbUser("postgres"), config.WithDbPassword("postgres"), config.WithDbName("postgres"))
-		sqlDb, err = connectDb(ctx, logger, cfg)
+		db, err = connectDb(ctx, logger, cfg)
 	case env.PROD:
-	// TODO: implement PROD db
+		// TODO: implement PROD DB
 	default:
 		return nil, errors.New("unknown environment mode")
 	}
 
-	db = sqlx.NewDb(sqlDb, "pgx")
 	return
+}
+
+func ExportDb(db *sql.DB) *sqlx.DB {
+	return sqlx.NewDb(db, "pgx")
 }
 
 func connectDb[T config.SQLConfig](ctx context.Context, logger *logrus.Entry, cfg T) (db *sql.DB, err error) {
