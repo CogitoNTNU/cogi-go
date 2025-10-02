@@ -7,7 +7,10 @@ import (
 
 	routes "github.com/CogitoNTNU/cogi-go/internal/api/router"
 	"github.com/CogitoNTNU/cogi-go/internal/config"
+	"github.com/CogitoNTNU/cogi-go/internal/handler"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
+	userRepository "github.com/CogitoNTNU/cogi-go/internal/repository/user"
+	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
 	"github.com/gin-gonic/gin"
 	"github.com/mbndr/figlet4go"
@@ -20,9 +23,9 @@ import (
 type Server struct {
 	Logger *logrus.Entry
 	engine *gin.Engine
-	env *env.EnvConfig
-	Ctx *context.Context
-	db *sql.DB
+	env    *env.EnvConfig
+	Ctx    *context.Context
+	db     *sql.DB
 }
 
 func InitServer() (*Server, error) {
@@ -32,18 +35,26 @@ func InitServer() (*Server, error) {
 	defer cancel()
 
 	cfg := config.LoadApiConfig()
-	env := env.Configure(".env")
+	e := env.Configure(".env")
+	cors := cfg.CorsNew(e)
+
+	if e.Read("ENVIRONMENT") == env.PROD {
+		engine.Use(cors)
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
+	}
 
 	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
 
-	database, err := db.InitDb(env, logger, queryCtx)
+	database, err := db.InitDb(e, logger, queryCtx)
 
 	return &Server{
 		Logger: logger,
 		engine: engine,
-		env: env,
-		Ctx: &ctx,
-		db: database,
+		env:    e,
+		Ctx:    &ctx,
+		db:     database,
 	}, err
 }
 
@@ -69,10 +80,15 @@ func (s *Server) Serve() {
 	sqlCheck := checks.SqlCheck{Sql: s.db}
 	healthcheck.New(s.engine, healthcheckConfig.DefaultConfig(), []checks.Check{sqlCheck})
 
+	userRepository := userRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
+	userService := service.NewUserService(userRepository)
 
-	// Register routes
+	// Initialize handlers
+	userHandler := handler.NewUserHandler(userService, s.Ctx)
+
+	// Register routes and handlers
 	s.Logger.WithTime(time.Now()).Info("Performing health checks...")
-	routes.RegisterPublicRoutes(s.engine)
+	routes.RegisterPublicRoutes(s.engine, userHandler)
 	routes.RegisterPrivateRoutes(s.engine)
 	routes.RegisterAdminRoutes(s.engine)
 

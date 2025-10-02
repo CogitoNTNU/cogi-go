@@ -1,6 +1,9 @@
 package config
 
 import (
+	"github.com/CogitoNTNU/cogi-go/internal/util/env"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -45,3 +48,10 @@ func (c *LocalDbConfig) loadDefault() (*LocalDbConfig, error) {
 	}
 	return c, nil
 }
+
+func (a *Api) CorsNew(e *env.EnvConfig) gin.HandlerFunc {
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"https://cogito-ntnu.no"}
+	return cors.New(config)
+}
+

@@ -11,3 +11,6 @@ cogigo-dev:
 	# go run cmd/migrations/main.go
 	docker compose up -d
 	go run cmd/main.go
+
+migrate:
+	go run cmd/migrations/main.go

@@ -41,11 +41,11 @@ func InitRead(db *sqlx.DB) (readQueries, error) {
 	var err error
 
 	if qs.getUser, err = db.PrepareNamed(qGetUser); err != nil {
-		return qs, fmt.Errorf("Error preparing GetMember query: %s", err)
+		return qs, fmt.Errorf("Error preparing GetUser query: %s", err)
 	}
 
 	if qs.getUsers, err = db.PrepareNamed(qGetUsers); err != nil {
-		return qs, fmt.Errorf("error preparing getmembers query: %s", err)
+		return qs, fmt.Errorf("error preparing GetUsers query: %s", err)
 	}
 
 	return qs, nil
