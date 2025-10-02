@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS projects(
-   project_id serial PRIMARY KEY,
+   project_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
    title VARCHAR (300) NOT NULL,
    github_url VARCHAR (300) NOT NULL,
    logo VARCHAR (300) NOT NULL,

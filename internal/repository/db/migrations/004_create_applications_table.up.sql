@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS applications (
-    application_id serial PRIMARY KEY,
-    user_id INT REFERENCES users(user_id) ON DELETE CASCADE NOT NULL,
+    application_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE NOT NULL,
 
-    project_id_1 INT REFERENCES projects(project_id) ON DELETE CASCADE,
-    project_id_2 INT REFERENCES projects(project_id) ON DELETE CASCADE,
-    project_id_3 INT REFERENCES projects(project_id) ON DELETE CASCADE,
+    project_id_1 UUID REFERENCES projects(project_id) ON DELETE CASCADE,
+    project_id_2 UUID REFERENCES projects(project_id) ON DELETE CASCADE,
+    project_id_3 UUID REFERENCES projects(project_id) ON DELETE CASCADE,
 
     application_text TEXT NOT NULL,
     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

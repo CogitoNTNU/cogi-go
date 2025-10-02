@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS articles (
-    article_id serial PRIMARY KEY,
+    article_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     content JSONB NOT NULL,
-    author_id INT REFERENCES users(user_id) ON DELETE CASCADE NOT NULL,
-    project_id INT REFERENCES projects(project_id) ON DELETE CASCADE NOT NULL,
+    author_id UUID REFERENCES users(user_id) ON DELETE CASCADE NOT NULL,
+    project_id UUID REFERENCES projects(project_id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
