@@ -48,7 +48,8 @@ cd cogi-go
 To start the development server, run:
 
 ```bash
-go run cmd/main.go
+make cogigo-dev
+make migrate
 ```
 
 ## Technologies Used
@@ -64,6 +65,12 @@ This project leverages the following technologies:
       <td align="center">
         <a href="https://github.com/sandviklee">
             <img src="https://github.com/sandviklee.png?size=1920" width="100px;"/><br />
+            <sub><b>Simon Sandvik Lee</b></sub>
+        </a>
+    </td>
+    <td align="center">
+        <a href="https://github.com/A1ice-Z">
+            <img src="https://github.com/A1ice-Z.png?size=1920" width="100px;"/><br />
             <sub><b>Simon Sandvik Lee</b></sub>
         </a>
     </td>
