@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	routes "github.com/CogitoNTNU/cogi-go/internal/api/router"
@@ -21,6 +22,7 @@ import (
 )
 
 type Server struct {
+	cfg    *config.Api
 	Logger *logrus.Entry
 	engine *gin.Engine
 	env    *env.EnvConfig
@@ -29,6 +31,8 @@ type Server struct {
 }
 
 func InitServer() (*Server, error) {
+
+	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
 	ctx := context.Background()
 	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
@@ -40,9 +44,6 @@ func InitServer() (*Server, error) {
 
 	if e.Read("ENVIRONMENT") == env.PROD {
 		engine.Use(cors)
-		gin.SetMode(gin.ReleaseMode)
-	} else {
-		gin.SetMode(gin.DebugMode)
 	}
 
 	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
@@ -50,6 +51,7 @@ func InitServer() (*Server, error) {
 	database, err := db.InitDb(e, logger, queryCtx)
 
 	return &Server{
+		cfg:    cfg,
 		Logger: logger,
 		engine: engine,
 		env:    e,
@@ -61,11 +63,9 @@ func InitServer() (*Server, error) {
 func (s *Server) Serve() {
 	s.Logger.WithContext(*s.Ctx).Info("Initializing server... \n")
 
-	ascii := figlet4go.NewAsciiRender()
-	render, _ := ascii.Render("COGI-GO!!")
-	s.Logger.Info("\n" + render)
+	render := renderAscii(s.cfg.AppName)
+	s.Logger.Info("\n \n" + render + "\n \n")
 
-	// Start Database
 	s.Logger.WithTime(time.Now()).Info("Starting database...")
 	sqlxDb := db.ExportDb(s.db) // TODO: Inject sqlxDb into repositories which are then used by services -> handlers
 	defer func() {
@@ -75,24 +75,32 @@ func (s *Server) Serve() {
 		}
 	}()
 
-	// Health checks
 	s.Logger.WithTime(time.Now()).Info("Performing health checks...")
 	sqlCheck := checks.SqlCheck{Sql: s.db}
 	healthcheck.New(s.engine, healthcheckConfig.DefaultConfig(), []checks.Check{sqlCheck})
 
+	s.Logger.WithTime(time.Now()).Info("Registering routes...")
 	userRepository := userRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
 	userService := service.NewUserService(userRepository)
 
-	// Initialize handlers
 	userHandler := handler.NewUserHandler(userService, s.Ctx)
 
-	// Register routes and handlers
-	s.Logger.WithTime(time.Now()).Info("Performing health checks...")
 	routes.RegisterPublicRoutes(s.engine, userHandler)
 	routes.RegisterPrivateRoutes(s.engine)
 	routes.RegisterAdminRoutes(s.engine)
 
-	// Start server
 	s.Logger.WithContext(*s.Ctx).Info("Initialization Complete! \n")
-	s.engine.Run()
+	s.engine.Run(fmt.Sprintf(":%d", s.cfg.MainPort))
+}
+
+func renderAscii(input string) string {
+	ascii := figlet4go.NewAsciiRender()
+	options := figlet4go.NewRenderOptions()
+
+	options.FontName = "speed"
+	ascii.LoadFont("./misc/fonts/speed.flf")
+
+	render, _ := ascii.RenderOpts(input, options)
+
+	return render
 }

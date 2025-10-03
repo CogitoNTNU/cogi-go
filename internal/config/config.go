@@ -8,7 +8,7 @@ import (
 )
 
 type Api struct {
-	AppName    string `split_words:"true" default:"cogi-go api v1"`
+	AppName    string `split_words:"true" default:"COGI-GO!!"`
 	LogLevel   string `split_words:"true" default:"DEBUG"`
 	MainHost   string `split_words:"true" default:"localhost"`
 	MainPort   int    `split_words:"true" default:"8080"`
@@ -17,7 +17,8 @@ type Api struct {
 
 func LoadApiConfig() *Api {
 	var cfg Api = Api{
-		AppName: "cogi-go api v1",
+		AppName: "COGI-GO!!",
+		MainPort: 8080,
 	}
 	return &cfg
 }
@@ -54,4 +55,3 @@ func (a *Api) CorsNew(e *env.EnvConfig) gin.HandlerFunc {
 	config.AllowOrigins = []string{"https://cogito-ntnu.no"}
 	return cors.New(config)
 }
-
