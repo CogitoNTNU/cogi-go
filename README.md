@@ -1,10 +1,19 @@
-# Cog-GO!! The COGITO NTNU Backend
+# COGI-GO!! The Cogito NTNU Web Backend
 Backend for [Cogito-NTNU](https://cogito-ntnu.no)
+
+_______________________________    __________________________
+__  ____/_  __ \_  ____/___  _/    __  ____/_  __ \__  /__  /
+_  /    _  / / /  / __  __  /_______  / __ _  / / /_  /__  /
+/ /___  / /_/ // /_/ / __/ /_/_____/ /_/ / / /_/ / /_/  /_/
+\____/  \____/ \____/  /___/       \____/  \____/ (_)  (_)
+
 
 ---
 
 NB: Any pushes to main will update the current website at the url!
 If you wish upon any changes, either make a branch or contact Simon Sandvik Lee on Slack!
+
+---
 
 ## Table of Contents
 
