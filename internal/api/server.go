@@ -10,6 +10,7 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/config"
 	"github.com/CogitoNTNU/cogi-go/internal/handler"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
+	projectRepository "github.com/CogitoNTNU/cogi-go/internal/repository/project"
 	userRepository "github.com/CogitoNTNU/cogi-go/internal/repository/user"
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
@@ -80,12 +81,24 @@ func (s *Server) Serve() {
 	healthcheck.New(s.engine, healthcheckConfig.DefaultConfig(), []checks.Check{sqlCheck})
 
 	s.Logger.WithTime(time.Now()).Info("Registering routes...")
+	
+	// User endpoints
 	userRepository := userRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
 	userService := service.NewUserService(userRepository)
-
 	userHandler := handler.NewUserHandler(userService, s.Ctx)
 
-	routes.RegisterPublicRoutes(s.engine, userHandler)
+	// Project endpoints	
+	projectRepository := projectRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
+	projectService := service.NewProjectService(projectRepository)
+	projectHandler := handler.NewProjectHandler(projectService, s.Ctx)
+
+	handlers := &routes.Handlers{
+		User:    userHandler,
+		Project: projectHandler,
+	}
+
+	routes.RegisterPublicRoutes(s.engine, handlers)
+
 	routes.RegisterPrivateRoutes(s.engine)
 	routes.RegisterAdminRoutes(s.engine)
 

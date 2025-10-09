@@ -5,14 +5,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// TODO: Smart way to inject all handlers
-func RegisterPublicRoutes(router *gin.Engine, handlers *handler.User) {
-	// TODO: Initialize public routes here
-	// e.g router.GET("/public", publicHandler)
+type Handlers struct {
+	User    *handler.User
+	Project *handler.Project
+}
 
-	router.GET("/users", handlers.GetAllUsers)
-	router.GET("/users/:userId", handlers.GetUserByID)
-
+func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
+	api := router.Group("/api")
+    
+    users := api.Group("/users")
+    {
+        users.GET("", handlers.User.GetAllUsers)
+        users.GET("/:userId", handlers.User.GetUserByID)
+    }
+    
+    projects := api.Group("/projects")
+    {
+        projects.GET("", handlers.Project.GetAllProjects)
+        projects.GET("/:projectId", handlers.Project.GetProjectByID)
+    }
 }
 
 func RegisterPrivateRoutes(router *gin.Engine) {
