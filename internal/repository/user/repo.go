@@ -88,3 +88,49 @@ func (r *Repo) Close() (err error) {
 	}
 	return
 }
+
+func (r*Repo) getUserByEmail(ctx *context.Context, email string) (*model.User, *model.ErrorResponse) {
+	c, cancel := context.WithTimeout(*ctx, r.timeout)
+	defer cancel()
+var row stuct {
+	UserID string `db:"user_id"`
+	FirstName string `db:"first_name"`
+	LastName string `db:"last_name"`
+	Description string `db:"description"`
+	Nickname string `db:"nickname"`
+	Email string `db:"email"`
+	Phone string `db:"phone"`
+	Gender string `db:"gender"`
+	GithubURL string `db:"github_url"`
+	LinkedinURL string `db:"linkedin_url"`
+	KaggleURL string `db:"kaggle_url"`
+	HuggingfaceURL string `db:"huggingface_url"`
+	Password string `db:"password"`
+	Avatar string `db:"avatar"`
+	ImagePermission *time.Time `db:"image_permission"` //!
+	FoodPrefrence []string `db:"food_prefrence"`
+}
+if err := r.queries.Read.getUserByEmail.GetContext(c, &row, map[string]any{"email": email}); err != nil {
+	r.logger.WithError(err).Warn("user not found by email")
+	return nil, &model.ErrorResponse{Code: http.StatusNotFound, Message: "user not found"}
+}
+user := &model.User{
+	ID: row.UserID,
+	FirstName: row.FirstName,
+	LastName: row.LastName,
+	Description: row.Description,
+	Nickname: row.Nickname,
+	Email: row.Email,
+	Phone: row.Phone,
+	Gender: row.Gender,
+	GithubUrl: row.GithubURL,
+	linkedinUrl: row.LinkedinURL,
+	KaggleUrl: row.KaggleURL,
+	HuggingfaceUrl: row.HuggingfaceURL,
+	Password: row.Password,
+	Avatar: row.Avatar
+	ImagePermission: row.ImagePermission,
+	FoodPrefrence: row.FoodPrefrence,
+}
+return user, nil
+}

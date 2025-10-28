@@ -13,6 +13,7 @@ type queries struct {
 type readQueries struct {
 	getUser  *sqlx.NamedStmt
 	getUsers *sqlx.NamedStmt
+	getUserByEmail *sqlx.NamedStmt
 }
 
 type writeQueries struct {
