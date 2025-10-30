@@ -9,10 +9,19 @@ import (
 type Handlers struct {
 	User    *handler.User
 	Project *handler.Project
+	AuthMW *jwt.GinJWTMiddleware
+	GoogleLogin gin.HandlerFunc
 }
 
 func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 	api := router.Group("/api")
+	auth := api.Group("/auth") 
+	{
+		auth.POST("/login", handlers.AuthMW.LoginHandler)
+		auth.POST("/logout", handlers.AuthMW.LogoutHandler)
+		auth.GET("/refresh", handlers.AuthMW.RefreshHandler)
+		auth.POST("/google", handlers.GoogleLogin)
+	}
 
 	users := api.Group("/users")
 	{
@@ -25,11 +34,14 @@ func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 		projects.GET("", handlers.Project.GetAllProjects)
 		projects.GET("/:projectId", handlers.Project.GetProjectByID)
 	}
+
 }
 
 func RegisterPrivateRoutes(router *gin.Engine, register *jwt.GinJWTMiddleware, handlers *Handlers) {
-	handlerfunc := register.MiddlewareFunc()
-	r := router.Group("/api", handlerfunc)
+	handlerFunc := register.MiddlewareFunc()
+	api := router.Group("/api", handlerFunc)
+	r := router.Group("/api", handlerFunc)
+	api.Use(handlers.AuthMW.MiddlewareFunc())
 	auth := r.Group("/auth")
 	{
 		auth.GET("/profile", handlers.User.GetUserByID)

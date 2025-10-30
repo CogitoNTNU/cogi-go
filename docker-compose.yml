@@ -6,6 +6,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/18/docker 
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
       interval: 5s
@@ -14,7 +15,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - 'cogigo_data:/var/lib/postgresql/data'
+      - 'cogigo_data:/var/lib/postgresql/18/docker'
 
 volumes:
   cogigo_data: {}

@@ -13,11 +13,15 @@ var (
 
 type EnvConfig struct {
 	env_path string
-  logger *logrus.Logger
+	logger   *logrus.Logger
+}
+
+func (p *EnvConfig) ReadIntDefault(s string, i int) any {
+	panic("unimplemented")
 }
 
 func Configure(path string) *EnvConfig {
-  return &EnvConfig{env_path: path}
+	return &EnvConfig{env_path: path}
 }
 
 func (p *EnvConfig) Read(key string) (value string) {

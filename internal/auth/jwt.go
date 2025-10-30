@@ -22,21 +22,21 @@ type googleLoginRequest struct {
 }
 type Identity struct {
 	UserID string `json:"userId"`
-	Email stirng `json:"email"`
+	Email string `json:"email"`
 }
 func NewAuthMiddleware(e *env.EnvConfig, logger *logrus.Entry, userRepo *userRepository.Repo, appCtx *context.Context) (*jwt.GinJWTMiddleware, error) {
 	secret := e.Read("JWT_SECRET")
 	if secret == "" {
-		return nilm errors.New("JWT_SECRET not set")
+		return nil, errors.New("JWT_SECRET not set")
 	}
 timeoutMin := e.ReadIntDefault("JWT_TIMEOUT_MIN", 15)
-	maxRedreshHours := e.ReadIntDefault("JWT_MAX_REFRESH_HOURS", 24) 
+	maxRefreshHours := e.ReadIntDefault("JWT_MAX_REFRESH_HOURS", 24) 
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm: "cogi-go",
 		Key: []byte(secret),
 		Timeout: time.Duration(timeoutMin) * time.Minute,
-		MaxRefresh: time.Duration(maxRedreshHours) * time.Hour,
-		identityKey: identityKey,
+		MaxRefresh: time.Duration(maxRefreshHours) * time.Hour,
+		IdentityKey: identityKey,
 		SendCookie: true,
 		CookieHTTPOnly: true,
 		CookieMaxAge: timeoutMin * 60,
@@ -63,7 +63,7 @@ return &Identity{UserID: user.ID, Email: user.Email}, nil
 			if id, ok := data.(*Identity); ok {
 				return jwt.MapClaims{
 					identityKey: id.UserID,
-					"email": id.email
+					"email": id.Email,
 				}
 			}
 			return jwt.MapClaims{}
@@ -75,7 +75,7 @@ return &Identity{UserID: user.ID, Email: user.Email}, nil
 			return &Identity{UserID: uid, Email: email}
 		},
 		Authorizator: func(data any, c *gin.Context) bool {
-			-, ok := data.(*Identity)
+			_, ok := data.(*Identity)
 			return ok
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
@@ -90,7 +90,7 @@ return authMiddleware, nil
 }
 func GoogleLoginHandler(e *env.EnvConfig, logger *logrus.Entry, auth *jwt.GinJWTMiddleware) gin.HandlerFunc {
 	audience := e.Read("GOOGLE_CLIENT_ID")
-	return func(c *gin.Contect) {
+	return func(c *gin.Context) {
 		var req googleLoginRequest
 		if err := c.ShouldBindJSON(&req); err !=nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -102,9 +102,9 @@ payload, err := idtoken.Validate(c, req.IDToken, audience)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid google token"})
 			return
 		}
-userID, _ := pauload.Claims["sub"].(string)
+userID, _ := payload.Claims["sub"].(string)
 		email, _ := payload.Claims["email"].(string)
-		token, expire, err := auth.TokenGeneratoer(&Identity{UserID: userID, Email: email})
+		token, expire, err := auth.TokenGenerator(&Identity{UserID: userID, Email: email})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
 			return
