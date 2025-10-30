@@ -4,7 +4,7 @@ import(
 	"errors"
 	"net/http"
 	"time"
-jwt"github.com/appleboy/gin-jwt/v2"
+jwt"github.com/appleboy/gin-jwt/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -104,13 +104,13 @@ payload, err := idtoken.Validate(c, req.IDToken, audience)
 		}
 userID, _ := payload.Claims["sub"].(string)
 		email, _ := payload.Claims["email"].(string)
-		token, expire, err := auth.TokenGenerator(&Identity{UserID: userID, Email: email})
+		token, err := auth.TokenGenerator(&Identity{UserID: userID, Email: email})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
 			return
 		}
-		auth.SetCookie(c, token, expire)
-		c.JSON(http.StatusOK, gin.H{"token": token, "expire": expire})
+		auth.SetCookie(c, token.AccessToken)
+		c.JSON(http.StatusOK, gin.H{"token": token})
 	}
 }
 

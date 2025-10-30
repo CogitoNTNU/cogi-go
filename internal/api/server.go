@@ -115,7 +115,7 @@ func (s *Server) Serve() {
 		AuthMW:      authMW,
 		GoogleLogin: googleLogin,
 	}
-	
+
 	// Health checks
 	s.Logger.WithTime(time.Now()).Info("Registering health checks...")
 	sqlCheck := checks.SqlCheck{Sql: s.db}
