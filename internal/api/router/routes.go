@@ -9,6 +9,7 @@ import (
 type Handlers struct {
 	User    *handler.User
 	Project *handler.Project
+	Sponsor *handler.Sponsor
 }
 
 func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
@@ -24,6 +25,12 @@ func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 	{
 		projects.GET("", handlers.Project.GetAllProjects)
 		projects.GET("/:projectId", handlers.Project.GetProjectByID)
+	}
+
+	sponsors := api.Group("/sponsors")
+	{
+		sponsors.GET("", handlers.Sponsor.GetAllSponsors)
+		sponsors.GET("/:id", handlers.Sponsor.GetSponsorByID)
 	}
 }
 
