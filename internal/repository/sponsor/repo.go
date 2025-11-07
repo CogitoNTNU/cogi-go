@@ -65,7 +65,7 @@ func (r *Repo) GetSponsorByID(ctx *context.Context, sponsorID uuid.UUID) (*model
 
 	var sponsorResult db.Sponsor
 	args := map[string]any{
-		"sponsor_id": sponsorID,
+		"sponsorId": sponsorID,
 	}
 
 	err := r.queries.Read.getSponsor.GetContext(cCtx, &sponsorResult, args)
