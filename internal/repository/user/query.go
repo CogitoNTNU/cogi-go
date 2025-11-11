@@ -49,6 +49,10 @@ func InitRead(db *sqlx.DB) (readQueries, error) {
 		return qs, fmt.Errorf("error preparing GetUsers query: %s", err)
 	}
 
+	if qs.getUserByEmail, err = db.PrepareNamed(qGetUserByEmail); err != nil {
+		return qs, fmt.Errorf("error preparing GetUserByEmail query: %s", err)
+	}
+
 	return qs, nil
 }
 
@@ -83,6 +87,11 @@ func (q *queries) Close() (err error) {
 	if err = q.Read.getUser.Close(); err != nil {
 		return fmt.Errorf("error closing GetMember query: %w", err)
 	}
+
+	if err = q.Read.getUserByEmail.Close(); err != nil {
+    	return fmt.Errorf("error closing GetUserByEmail query: %w", err)
+	}
+
 
 	return nil
 }

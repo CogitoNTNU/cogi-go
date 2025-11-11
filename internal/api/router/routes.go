@@ -49,5 +49,5 @@ func RegisterPrivateRoutes(router *gin.Engine, register *jwt.GinJWTMiddleware, h
 }
 
 func RegisterAdminRoutes(router *gin.Engine) {
-
+	// TODO: Implement admin-specific routes here.
 }
