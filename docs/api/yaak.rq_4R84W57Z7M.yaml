@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_4R84W57Z7M
+createdAt: 2025-11-11T16:25:40.699590
+updatedAt: 2025-11-11T16:25:45.650008
+workspaceId: wk_rxdC9r7YRV
+folderId: fl_iWGDzA8WN2
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: ''
+sortPriority: -0.0002
+url: ${[ url ]}/projects
+urlParameters: []
