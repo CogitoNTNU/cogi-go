@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -11,6 +12,6 @@ type Article struct {
 	Content   []byte
 	AuthorId  uuid.UUID
 	ProjectId uuid.UUID
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type UserActivity struct {
-	Id        uuid.UUID
-	UserId    uuid.UUID
-	Activity  []*time.Time
+	Id       uuid.UUID
+	UserId   uuid.UUID
+	Activity []time.Time
 }

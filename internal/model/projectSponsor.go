@@ -9,6 +9,6 @@ import (
 type ProjectSponsor struct {
 	ProjectID uuid.UUID
 	SponsorID uuid.UUID
-	StartDate *time.Time
-	EndDate *time.Time
+	StartDate time.Time
+	EndDate   time.Time
 }

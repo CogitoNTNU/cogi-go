@@ -7,14 +7,14 @@ import (
 )
 
 type Achivement struct {
-	Id          uuid.UUID
-	Title      string
-	IconUrl     *string
+	Id      uuid.UUID
+	Title   string
+	IconUrl *string
 }
 
 type UserAchivement struct {
-	Id          uuid.UUID
-	UserId      uuid.UUID
+	Id           uuid.UUID
+	UserId       uuid.UUID
 	AchivementId uuid.UUID
-	DateEarned  *time.Time
+	DateEarned   time.Time
 }
