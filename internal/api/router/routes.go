@@ -9,6 +9,7 @@ import (
 type Handlers struct {
 	User    *handler.User
 	Project *handler.Project
+	Event *handler.Event
 }
 
 func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
@@ -24,6 +25,11 @@ func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 	{
 		projects.GET("", handlers.Project.GetAllProjects)
 		projects.GET("/:projectId", handlers.Project.GetProjectByID)
+	}
+
+	events := api.Group("/events")
+	{
+		events.GET("", handlers.Event.GetAllEvents)
 	}
 }
 

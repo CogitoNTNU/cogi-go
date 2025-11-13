@@ -4,23 +4,25 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	routes "github.com/CogitoNTNU/cogi-go/internal/api/router"
-	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/CogitoNTNU/cogi-go/internal/config"
 	"github.com/CogitoNTNU/cogi-go/internal/handler"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
+	eventRepository "github.com/CogitoNTNU/cogi-go/internal/repository/event"
 	projectRepository "github.com/CogitoNTNU/cogi-go/internal/repository/project"
 	userRepository "github.com/CogitoNTNU/cogi-go/internal/repository/user"
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
-	"github.com/appleboy/gin-jwt/v3"
+	jwt "github.com/appleboy/gin-jwt/v3"
 	"github.com/gin-gonic/gin"
+	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/mbndr/figlet4go"
 	"github.com/sirupsen/logrus"
 	healthcheck "github.com/tavsec/gin-healthcheck"
 	"github.com/tavsec/gin-healthcheck/checks"
 	healthcheckConfig "github.com/tavsec/gin-healthcheck/config"
-	"time"
 )
 
 type Server struct {
@@ -104,9 +106,15 @@ func (s *Server) Serve() {
 	projectService := service.NewProjectService(projectRepository)
 	projectHandler := handler.NewProjectHandler(projectService, s.Ctx)
 
+	// Event endpoints
+	eventRepository := eventRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
+	eventService := service.NewEventService(eventRepository)
+	eventHandler := handler.NewEventHandler(eventService, s.Ctx)
+
 	handlers := &routes.Handlers{
 		User:    userHandler,
 		Project: projectHandler,
+		Event:   eventHandler,
 	}
 
 	routes.RegisterPublicRoutes(s.engine, handlers)
