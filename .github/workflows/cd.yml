@@ -1,0 +1,27 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on:
+      group: OpenStack
+      labels: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: cogitontnu
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build Image and push to GitHub Container Registry
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/cogitontnu/cogi-go:latest
