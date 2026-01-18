@@ -13,10 +13,35 @@ services:
       retries: 20
     volumes:
       - 'cogigo_data:/var/lib/postgresql/18/docker'
+    networks:
+      - proxy
+  adminer:
+    container_name: adminer
+    image: adminer:latest
+    networks:
+      - proxy
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.entrypoints=http"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.cogito-ntnu.no`)"
+      - "traefik.http.routers.adminer.service=adminer"
+      - "traefik.http.middlewares.adminer-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.adminer.middlewares=adminer-https-redirect"
+      - "traefik.http.routers.adminer-secure.entrypoints=https"
+      - "traefik.http.routers.adminer-secure.rule=Host(`adminer.cogito-ntnu.no`)"
+      - "traefik.http.routers.adminer-secure.tls=true"
+      - "traefik.http.routers.adminer-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.adminer-secure.service=adminer"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+
   cogito_backend:
     container_name: cogito_backend
     image: ghcr.io/cogitontnu/cogi-go:latest
-    command: sh -c "./migrations && ./main"
+    entrypoint: ["/bin/sh","-lc"]
+    command: "./main"
     environment:
       ENVIRONMENT: "PRODUCTION"
       SQL_HOST: cogigo_db
