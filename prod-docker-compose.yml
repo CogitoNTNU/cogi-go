@@ -2,6 +2,7 @@ services:
   cogigo_db:
     container_name: cogigo_db
     image: postgres:18.1
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -24,6 +25,7 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     labels:
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.http.routers.adminer.entrypoints=http"
       - "traefik.http.routers.adminer.rule=Host(`adminer.cogito-ntnu.no`)"
@@ -40,8 +42,7 @@ services:
   cogito_backend:
     container_name: cogito_backend
     image: ghcr.io/cogitontnu/cogi-go:latest
-    entrypoint: ["/bin/sh","-lc"]
-    command: "./main"
+    restart: unless-stopped
     environment:
       ENVIRONMENT: "PRODUCTION"
       SQL_HOST: cogigo_db
@@ -52,6 +53,7 @@ services:
     networks:
       - proxy
     labels:
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.http.routers.backend.entrypoints=http"
       - "traefik.http.routers.backend.rule=Host(`backend.cogito-ntnu.no`)"

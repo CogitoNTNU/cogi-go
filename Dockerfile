@@ -41,4 +41,3 @@ COPY entrypoints.sh /usr/local/bin/entrypoints.sh
 RUN chmod +x /usr/local/bin/entrypoints.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoints.sh"]
-CMD ["./main"]
