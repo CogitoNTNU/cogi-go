@@ -269,3 +269,23 @@ func (ua *UserAchivement) ToModel() *model.UserAchivement {
 		DateEarned: ua.DateEarned,
 	}
 }
+
+type TempApplication struct {
+	Id              uuid.UUID
+	Email           string
+	PhoneNumber     int
+	Projects        []string
+	ApplicationText string
+	CreatedAt      *time.Time
+}
+
+func (ta *TempApplication) ToModel() *model.TempApplication {
+	return &model.TempApplication{
+		Id:              ta.Id,
+		Email:           ta.Email,
+		PhoneNumber:     ta.PhoneNumber,
+		Projects:        ta.Projects,
+		ApplicationText: ta.ApplicationText,
+		CreatedAt:      ta.CreatedAt,
+	}
+}
