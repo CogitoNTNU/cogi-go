@@ -271,20 +271,24 @@ func (ua *UserAchivement) ToModel() *model.UserAchivement {
 }
 
 type TempApplication struct {
-	Id              uuid.UUID
-	Email           string
-	PhoneNumber     string
-	Projects        []string
-	ApplicationText string
-	CreatedAt      *time.Time
+	Id              uuid.UUID `db:"temp_application_id"`
+	FirstName       string     `db:"first_name"`
+	LastName        string     `db:"last_name"`
+	Email           string     `db:"email"`
+	PhoneNumber     string     `db:"phone_number"`
+	Projects        pq.StringArray   `db:"projects"`
+	ApplicationText string     `db:"application_text"`
+	CreatedAt      *time.Time  `db:"created_at"`
 }
 
 func (ta *TempApplication) ToModel() *model.TempApplication {
 	return &model.TempApplication{
 		Id:              ta.Id,
+		FirstName:       ta.FirstName,
+		LastName:        ta.LastName,
 		Email:           ta.Email,
 		PhoneNumber:     ta.PhoneNumber,
-		Projects:        ta.Projects,
+		Projects:        []string(ta.Projects),
 		ApplicationText: ta.ApplicationText,
 		CreatedAt:      ta.CreatedAt,
 	}

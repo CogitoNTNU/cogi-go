@@ -7,6 +7,8 @@ import (
 
 type TempApplication struct {
 	Id              uuid.UUID
+	FirstName       string
+	LastName        string
 	Email           string
 	PhoneNumber     string
 	Projects        []string
