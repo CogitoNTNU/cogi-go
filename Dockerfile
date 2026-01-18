@@ -36,5 +36,9 @@ COPY --from=builder /app/misc ./misc
 # Expose port 8080
 EXPOSE 8080
 
-# Run the application
+# Copy entrypoint script and use it
+COPY entrypoints.sh /usr/local/bin/entrypoints.sh
+RUN chmod +x /usr/local/bin/entrypoints.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoints.sh"]
 CMD ["./main"]
