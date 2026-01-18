@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_5xccnvKag4
+createdAt: 2026-01-18T20:55:14.522443
+updatedAt: 2026-01-18T20:56:13.226840
+workspaceId: wk_rxdC9r7YRV
+folderId: fl_hz6Gfn23d4
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Healthcheck
+sortPriority: -0.0002
+url: ${[ url ]}/healthz
+urlParameters: []

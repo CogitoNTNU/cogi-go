@@ -1,0 +1,18 @@
+type: http_request
+model: http_request
+id: rq_uLSS3SHDMA
+createdAt: 2026-01-18T20:56:53.324286
+updatedAt: 2026-01-18T20:56:55.490280
+workspaceId: wk_rxdC9r7YRV
+folderId: fl_G5jfP9bvDh
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: Get all
+sortPriority: -0.0002
+url: ''
+urlParameters: []
