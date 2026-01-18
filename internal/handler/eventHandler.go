@@ -26,3 +26,15 @@ func (e *Event) GetAllEvents(gCtx *gin.Context) {
 
     gCtx.JSON(http.StatusOK, allEvents)
 }
+
+func (e *Event) GetEventByID(gCtx *gin.Context) {
+    eventId := gCtx.Param("eventId")
+    event, err := e.service.GetEventByID(e.ctx, eventId)
+    
+    if err != nil {
+        gCtx.AbortWithStatusJSON(err.Code, err.Message)
+        return
+    }
+
+    gCtx.JSON(http.StatusOK, event)
+}

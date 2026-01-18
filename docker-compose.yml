@@ -1,7 +1,7 @@
 services:
     cogigo_db:
         container_name: cogigo_db
-        image: postgres:latest
+        image: postgres:17
         environment:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: postgres
@@ -14,7 +14,7 @@ services:
         ports:
             - "5432:5432"
         volumes:
-            - "cogigo_data:/var/lib/postgresql/18/docker"
+            - 'cogigo_data:/var/lib/postgresql/data'    
 
 volumes:
     cogigo_data: {}

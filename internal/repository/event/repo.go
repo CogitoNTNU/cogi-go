@@ -8,6 +8,7 @@ import (
 
 	"github.com/CogitoNTNU/cogi-go/internal/model"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 )
@@ -57,6 +58,26 @@ func (r *Repo) GetAllEvents(ctx *context.Context) ([]model.Event, *model.ErrorRe
 	}
 
 	return events, nil
+}
+
+func (r *Repo) GetEventByID(ctx *context.Context, eventId uuid.UUID) (*model.Event, *model.ErrorResponse) {
+	cCtx, cancel := context.WithTimeout(*ctx, r.queryTimeOutLimit)
+	defer cancel()
+
+	var eventResult db.Event
+	args := map[string]any{"eventId": eventId}
+	err := r.queries.Read.getEvent.SelectContext(cCtx, &eventResult, args)
+
+	if err != nil {
+		return nil, &model.ErrorResponse{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		}
+	}
+
+	event := eventResult.ToModel()
+
+	return event, nil
 }
 
 func (r *Repo) Close() (err error) {

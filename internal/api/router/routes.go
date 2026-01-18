@@ -30,6 +30,7 @@ func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 	events := api.Group("/events")
 	{
 		events.GET("", handlers.Event.GetAllEvents)
+		events.GET("/:eventId", handlers.Event.GetEventByID)
 	}
 }
 

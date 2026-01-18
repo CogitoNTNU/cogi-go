@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/CogitoNTNU/cogi-go/internal/model"
 	eventRepository "github.com/CogitoNTNU/cogi-go/internal/repository/event"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,4 +29,23 @@ func (e *Event) GetAllEvents(ctx *context.Context) ([]model.Event, *model.ErrorR
 
     return allEvents, nil
 
+}
+
+func (e *Event) GetEventByID(ctx *context.Context, eventId string) (*model.Event, *model.ErrorResponse) {
+    id, err := uuid.Parse(eventId)
+
+	if err != nil {
+		return nil, &model.ErrorResponse{
+			Code: http.StatusInternalServerError,
+			Message: err.Error(),
+		}
+	}
+
+    event, fetchErr := e.repository.GetEventByID(ctx, id)   
+
+    if fetchErr != nil {
+        return nil, fetchErr
+    }
+    
+    return event, nil
 }

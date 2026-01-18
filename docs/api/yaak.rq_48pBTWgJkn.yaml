@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_48pBTWgJkn
 createdAt: 2025-11-13T17:40:45.993044
-updatedAt: 2025-11-13T17:40:59.592231
+updatedAt: 2025-11-13T19:07:45.656111
 workspaceId: wk_rxdC9r7YRV
 folderId: fl_9aSkBB8Bts
 authentication: {}
@@ -14,5 +14,5 @@ headers: []
 method: GET
 name: ''
 sortPriority: -0.0002
-url: ${[ url ]}/events
+url: ${[ url ]}/events/ab3f2bb8-50ad-4085-bf89-1a1dd77866b1
 urlParameters: []
