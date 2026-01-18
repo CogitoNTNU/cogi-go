@@ -15,7 +15,8 @@ services:
       - 'cogigo_data:/var/lib/postgresql/data'
   cogito_backend:
     container_name: cogito_backend
-    image: cogito_backend:latest
+    image: ghcr.io/cogitontnu/cogi-go:latest
+    command: ["make", "cogigo-prod", "&&", "make", "migrate"]
     networks:
       - proxy
     labels:
