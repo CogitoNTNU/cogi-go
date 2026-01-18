@@ -1,0 +1,43 @@
+services:
+  cogigo_db:
+    container_name: cogigo_db
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - 'cogigo_data:/var/lib/postgresql/data'
+  cogito_backend:
+    container_name: cogito_backend
+    image: cogito_backend:latest
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.entrypoints=http"
+      - "traefik.http.routers.backend.rule=Host(`backend.cogito-ntnu.no`)"
+      - "traefik.http.routers.backend.service=cogito"
+      - "traefik.http.middlewares.backend-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.backend.middlewares=backend-https-redirect"
+      - "traefik.http.routers.backend-secure.entrypoints=https"
+      - "traefik.http.routers.backend-secure.rule=Host(`backend.cogito-ntnu.no`)"
+      - "traefik.http.routers.backend-secure.tls=true"
+      - "traefik.http.routers.backend-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.backend-secure.service=cogito"
+      - "traefik.http.services.cogito.loadbalancer.server.port=8080"
+    depends_on:
+      cogigo_db:
+        condition: service_healthy
+
+volumes:
+  cogigo_data: {}
+
+networks:
+  proxy:
+    external: true
