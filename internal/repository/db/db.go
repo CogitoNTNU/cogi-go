@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/CogitoNTNU/cogi-go/internal/config"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
@@ -19,7 +20,13 @@ func InitDb(e *env.EnvConfig, logger *logrus.Entry, ctx context.Context) (db *sq
 		cfg := config.NewLocalDbConfig(config.WithDbHost("localhost"), config.WithDbPort(5432), config.WithDbUser("postgres"), config.WithDbPassword("postgres"), config.WithDbName("postgres"))
 		db, err = connectDb(ctx, logger, cfg)
 	case env.PROD:
-		// TODO: implement PROD DB
+		host := e.Read("SQL_HOST")
+		port, _ := strconv.Atoi(e.Read("SQL_PORT"))
+		user := e.Read("SQL_USER")
+		password := e.Read("SQL_PASSWORD")
+		dbname := e.Read("SQL_DATABASE")
+		cfg := config.NewLocalDbConfig(config.WithDbHost(host), config.WithDbPort(port), config.WithDbUser(user), config.WithDbPassword(password), config.WithDbName(dbname))
+		db, err = connectDb(ctx, logger, cfg)
 	default:
 		return nil, errors.New("unknown environment mode")
 	}
