@@ -16,7 +16,14 @@ services:
   cogito_backend:
     container_name: cogito_backend
     image: ghcr.io/cogitontnu/cogi-go:latest
-    command: ["make", "cogigo-prod", "&&", "make", "migrate"]
+    command: sh -c "./migrations && ./main"
+    environment:
+      ENVIRONMENT: "PRODUCTION"
+      SQL_HOST: cogigo_db
+      SQL_PORT: 5432
+      SQL_USER: postgres
+      SQL_PASSWORD: postgres
+      SQL_DATABASE: postgres
     networks:
       - proxy
     labels:
