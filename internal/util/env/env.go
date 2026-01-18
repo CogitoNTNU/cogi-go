@@ -17,7 +17,10 @@ type EnvConfig struct {
 }
 
 func Configure(path string) *EnvConfig {
-  return &EnvConfig{env_path: path}
+  return &EnvConfig{
+    env_path: path,
+    logger:   logrus.New(),
+  }
 }
 
 func (p *EnvConfig) Read(key string) (value string) {

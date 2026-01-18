@@ -1,7 +1,7 @@
 services:
   cogigo_db:
     container_name: cogigo_db
-    image: postgres:latest
+    image: postgres:18.1
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -12,7 +12,7 @@ services:
       timeout: 3s
       retries: 20
     volumes:
-      - 'cogigo_data:/var/lib/postgresql/data'
+      - 'cogigo_data:/var/lib/postgresql/18/docker'
   cogito_backend:
     container_name: cogito_backend
     image: ghcr.io/cogitontnu/cogi-go:latest
