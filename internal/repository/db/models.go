@@ -273,7 +273,7 @@ func (ua *UserAchivement) ToModel() *model.UserAchivement {
 type TempApplication struct {
 	Id              uuid.UUID
 	Email           string
-	PhoneNumber     int
+	PhoneNumber     string
 	Projects        []string
 	ApplicationText string
 	CreatedAt      *time.Time
