@@ -33,9 +33,6 @@ COPY --from=builder /app/internal/repository/db/migrations ./internal/repository
 # Copy misc files (for fonts used in the application)
 COPY --from=builder /app/misc ./misc
 
-# Copy .env file
-COPY --from=builder /app/.env .
-
 # Expose port 8080
 EXPOSE 8080
 

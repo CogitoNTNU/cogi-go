@@ -4,8 +4,8 @@ import "github.com/sirupsen/logrus"
 
 import (
 	"github.com/spf13/viper"
+	"os"
 )
-
 var (
 	PROD string = "PRODUCTION"
 	DEV  string = "DEVELOPMENT"
@@ -24,19 +24,24 @@ func Configure(path string) *EnvConfig {
 }
 
 func (p *EnvConfig) Read(key string) (value string) {
-	logger := p.logger
-	viper.SetConfigFile(p.env_path)
-	err := viper.ReadInConfig()
+    logger := p.logger
+    
+    if value := os.Getenv(key); value != "" {
+        return value
+    }
 
-	if err != nil {
-		logger.WithError(err).Fatal("Couldn't intialize and find environmental variable.")
-	}
+    viper.SetConfigFile(p.env_path)
+    err := viper.ReadInConfig()
 
-	value, ok := viper.Get(key).(string)
+    if err != nil {
+        logger.WithError(err).Fatal("Couldn't intialize and find environmental variable.")
+    }
 
-	if !ok {
-		logger.Fatal("Invalid type assertion on value from env.")
-	}
+    value, ok := viper.Get(key).(string)
 
-	return
+    if !ok {
+        logger.Fatal("Invalid type assertion on value from env.")
+    }
+
+    return value
 }
