@@ -1,0 +1,26 @@
+type: http_request
+model: http_request
+id: rq_TQaYuLR2nS
+createdAt: 2026-01-19T00:01:30.484914
+updatedAt: 2026-01-19T00:26:00.410549
+workspaceId: wk_rxdC9r7YRV
+folderId: fl_G5jfP9bvDh
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ''
+headers:
+- enabled: true
+  name: X-Admin-Token
+  value: test-token-123
+  id: 4W0fkqCe2e
+- enabled: true
+  name: ''
+  value: ''
+  id: S0acdQWHpp
+method: GET
+name: Get CSV
+sortPriority: -0.0002
+url: ${[ url ]}/api/temp-member-application/export-csv
+urlParameters: []

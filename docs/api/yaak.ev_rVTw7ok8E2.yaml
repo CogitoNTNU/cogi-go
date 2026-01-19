@@ -1,0 +1,18 @@
+type: environment
+model: environment
+id: ev_rVTw7ok8E2
+workspaceId: wk_rxdC9r7YRV
+createdAt: 2026-01-18T22:27:31.411654
+updatedAt: 2026-01-18T23:21:50.888540
+name: Production
+public: true
+base: false
+parentModel: environment
+parentId: null
+variables:
+- enabled: true
+  name: url
+  value: https://backend.cogito-ntnu.no
+  id: Q5g3VDTBqW
+color: var(--danger)
+sortPriority: 0.0

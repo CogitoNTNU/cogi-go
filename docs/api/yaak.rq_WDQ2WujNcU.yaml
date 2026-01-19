@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_WDQ2WujNcU
 createdAt: 2025-10-14T17:21:14.173846
-updatedAt: 2025-10-14T17:22:32.704314
+updatedAt: 2026-01-18T20:56:48.706717
 workspaceId: wk_rxdC9r7YRV
 folderId: fl_vHTRwfZSYb
 authentication: {}
@@ -12,7 +12,7 @@ bodyType: null
 description: ''
 headers: []
 method: GET
-name: Get all users
+name: Get all
 sortPriority: -0.0001
 url: ${[ url ]}/users
 urlParameters: []

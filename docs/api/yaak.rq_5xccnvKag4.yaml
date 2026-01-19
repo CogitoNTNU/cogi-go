@@ -1,10 +1,10 @@
 type: http_request
 model: http_request
-id: rq_9C5TCC6ozH
-createdAt: 2025-10-14T17:20:24.841512
-updatedAt: 2026-01-18T20:56:50.560219
+id: rq_5xccnvKag4
+createdAt: 2026-01-18T20:55:14.522443
+updatedAt: 2026-01-18T20:56:13.226840
 workspaceId: wk_rxdC9r7YRV
-folderId: fl_gSXKyrVHCE
+folderId: fl_hz6Gfn23d4
 authentication: {}
 authenticationType: null
 body: {}
@@ -12,7 +12,7 @@ bodyType: null
 description: ''
 headers: []
 method: GET
-name: Profile
-sortPriority: 0.0
-url: ${[ url ]}/auth/profile
+name: Healthcheck
+sortPriority: -0.0002
+url: ${[ url ]}/healthz
 urlParameters: []

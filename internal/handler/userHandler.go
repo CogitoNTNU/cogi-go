@@ -30,7 +30,6 @@ func (u *User) GetAllUsers(gCtx *gin.Context) {
 func (u *User) GetUserByID(gCtx *gin.Context) {
 	userId := gCtx.Param("userId")
 	user, err := u.service.GetUserByID(u.ctx, userId)
-
 	if err != nil {
 		gCtx.AbortWithStatusJSON(err.Code, err.Message)
 		return

@@ -11,14 +11,13 @@ import (
 )
 
 type Project struct {
-	logger *logrus.Entry
+	logger     *logrus.Entry
 	repository *projectRepository.Repo
 }
 
-func NewProjectService(projectRepository *projectRepository.Repo) *Project {
-	return &Project{repository: projectRepository}
+func NewProjectService(projectRepository *projectRepository.Repo, logger *logrus.Entry) *Project {
+	return &Project{repository: projectRepository, logger: logger}
 }
-
 
 func (p *Project) GetAllProjects(ctx *context.Context) ([]model.Project, *model.ErrorResponse) {
 	allProjects, err := p.repository.GetAllProjects(ctx)
@@ -32,10 +31,9 @@ func (p *Project) GetAllProjects(ctx *context.Context) ([]model.Project, *model.
 
 func (p *Project) GetProjectByID(ctx *context.Context, projectId string) (*model.Project, *model.ErrorResponse) {
 	id, err := uuid.Parse(projectId)
-
 	if err != nil {
 		return nil, &model.ErrorResponse{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		}
 	}

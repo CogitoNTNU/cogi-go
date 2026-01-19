@@ -11,11 +11,11 @@ import (
 )
 
 type User struct {
-	logger *logrus.Entry
+	logger     *logrus.Entry
 	repository *userRepository.Repo
 }
 
-func NewUserService(userRepository *userRepository.Repo) *User {
+func NewUserService(userRepository *userRepository.Repo, logger *logrus.Entry) *User {
 	return &User{repository: userRepository}
 }
 
@@ -31,10 +31,9 @@ func (u *User) GetAllUsers(ctx *context.Context) ([]model.User, *model.ErrorResp
 
 func (u *User) GetUserByID(ctx *context.Context, userId string) (*model.User, *model.ErrorResponse) {
 	id, err := uuid.Parse(userId)
-
 	if err != nil {
 		return nil, &model.ErrorResponse{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		}
 	}

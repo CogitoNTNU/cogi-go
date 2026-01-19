@@ -11,18 +11,18 @@ import (
 )
 
 type Sponsor struct {
-	logger *logrus.Entry
+	logger     *logrus.Entry
 	repository *sponsorRepository.Repo
 }
 
-func NewSponsorService(sponsorRepository *sponsorRepository.Repo) *Sponsor {
-	return &Sponsor{repository: sponsorRepository}
+func NewSponsorService(sponsorRepository *sponsorRepository.Repo, logger *logrus.Entry) *Sponsor {
+	return &Sponsor{repository: sponsorRepository, logger: logger}
 }
 
 func (s *Sponsor) GetAllSponsors(ctx *context.Context) ([]model.Sponsor, *model.ErrorResponse) {
 	allSponsors, err := s.repository.GetAllSponsors(ctx)
 	if err != nil {
-		s.logger.Errorf("An error has occured when retrieving all sponsors. Error code: %s", err.Code)
+		s.logger.Errorf("An error has occured when retrieving all sponsors. Error code: %d", err.Code)
 		return nil, err
 	}
 
@@ -31,10 +31,9 @@ func (s *Sponsor) GetAllSponsors(ctx *context.Context) ([]model.Sponsor, *model.
 
 func (s *Sponsor) GetSponsorByID(ctx *context.Context, sponsorId string) (*model.Sponsor, *model.ErrorResponse) {
 	id, err := uuid.Parse(sponsorId)
-
 	if err != nil {
 		return nil, &model.ErrorResponse{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		}
 	}

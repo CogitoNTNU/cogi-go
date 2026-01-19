@@ -14,7 +14,7 @@ func main() {
 		}
 	}()
 
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 

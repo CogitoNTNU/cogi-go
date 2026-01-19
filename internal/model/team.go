@@ -4,8 +4,8 @@ import (
 	"github.com/google/uuid"
 )
 
-type Semester string;
-type GroupType string;
+type Semester string
+type GroupType string
 
 const (
 	SpringSemester Semester = "spring"
@@ -14,14 +14,14 @@ const (
 
 const (
 	MarketingGroup GroupType = "marketing"
-	BoardGroup    GroupType = "board"
-	SocialGroup   GroupType = "social"
+	BoardGroup     GroupType = "board"
+	SocialGroup    GroupType = "social"
 )
 
 type Team struct {
-	Id          uuid.UUID
-	Semester    Semester
-	Year       int
+	Id       uuid.UUID
+	Semester Semester
+	Year     int
 }
 
 type ProjectTeam struct {

@@ -15,16 +15,36 @@ import (
 )
 
 func InitDb(e *env.EnvConfig, logger *logrus.Entry, ctx context.Context) (db *sql.DB, err error) {
-	switch e.Read("ENVIRONMENT") {
+	envVal, err := e.Read("ENVIRONMENT")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read ENVIRONMENT: %w", err)
+	}
+	switch envVal {
 	case env.DEV:
 		cfg := config.NewLocalDbConfig(config.WithDbHost("localhost"), config.WithDbPort(5432), config.WithDbUser("postgres"), config.WithDbPassword("postgres"), config.WithDbName("postgres"))
 		db, err = connectDb(ctx, logger, cfg)
 	case env.PROD:
-		host := e.Read("SQL_HOST")
-		port, _ := strconv.Atoi(e.Read("SQL_PORT"))
-		user := e.Read("SQL_USER")
-		password := e.Read("SQL_PASSWORD")
-		dbname := e.Read("SQL_DATABASE")
+		host, err := e.Read("SQL_HOST")
+		if err != nil {
+			return nil, fmt.Errorf("failed to read SQL_HOST: %w", err)
+		}
+		portStr, err := e.Read("SQL_PORT")
+		if err != nil {
+			return nil, fmt.Errorf("failed to read SQL_PORT: %w", err)
+		}
+		port, _ := strconv.Atoi(portStr)
+		user, err := e.Read("SQL_USER")
+		if err != nil {
+			return nil, fmt.Errorf("failed to read SQL_USER: %w", err)
+		}
+		password, err := e.Read("SQL_PASSWORD")
+		if err != nil {
+			return nil, fmt.Errorf("failed to read SQL_PASSWORD: %w", err)
+		}
+		dbname, err := e.Read("SQL_DATABASE")
+		if err != nil {
+			return nil, fmt.Errorf("failed to read SQL_DATABASE: %w", err)
+		}
 		cfg := config.NewLocalDbConfig(config.WithDbHost(host), config.WithDbPort(port), config.WithDbUser(user), config.WithDbPassword(password), config.WithDbName(dbname))
 		db, err = connectDb(ctx, logger, cfg)
 	default:

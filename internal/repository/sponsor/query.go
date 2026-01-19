@@ -47,7 +47,7 @@ func InitRead(db *sqlx.DB) (readQueries, error) {
 	if qs.getSponsors, err = db.PrepareNamed(qGetSponsors); err != nil {
 		return qs, fmt.Errorf("error preparing GetSponsors query: %s", err)
 	}
-	
+
 	return qs, nil
 }
 
@@ -79,6 +79,6 @@ func (q *queries) Close() (err error) {
 	if err = q.Write.deleteSponsor.Close(); err != nil {
 		return fmt.Errorf("error closing deleteSponsor statement: %s", err)
 	}
-	
+
 	return nil
 }
