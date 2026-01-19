@@ -17,6 +17,7 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
 	jwt "github.com/appleboy/gin-jwt/v3"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/mbndr/figlet4go"
@@ -39,21 +40,32 @@ type Server struct {
 func InitServer() (*Server, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
+
+	// TODO: FIX HACKY CORS CONFIG
+	engine.RedirectTrailingSlash = false
+	engine.RedirectFixedPath = false
+	corscfg := cors.DefaultConfig()
+	corscfg.AllowOrigins = []string{"http://localhost:3000", "https://cogito-ntnu.no"}
+	corscfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	corscfg.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	corscfg.AllowCredentials = true
+	corscfg.MaxAge = 12 * time.Hour
+	engine.Use(cors.New(corscfg))
+	// cors := cfg.CorsNew(e)
+	// envVal, err := e.Read("ENVIRONMENT")
+	// if err != nil {
+	// 	logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
+	// }
+	// if envVal == env.PROD {
+	// }
+	// engine.Use(cors)
+
 	ctx := context.Background()
 	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
 	defer cancel()
 
 	cfg := config.LoadApiConfig()
 	e := env.Configure(".env")
-	cors := cfg.CorsNew(e)
-
-	// envVal, err := e.Read("ENVIRONMENT")
-	// if err != nil {
-	// 	logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
-	// }
-	// if envVal == env.PROD {
-	engine.Use(cors)
-	// }
 
 	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
 
