@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"github.com/CogitoNTNU/cogi-go/internal/config"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
@@ -34,17 +33,16 @@ func main() {
 
 	driver, err := postgres.WithInstance(database, &postgres.Config{})
 	if err != nil {
-		log.Fatal("Failed to create postgres driver:", err)
+		logger.Info("Failed to create postgres driver:", err)
 	}
 
 	migrate, err := migrate.NewWithDatabaseInstance(
 		"file://internal/repository/db/migrations",
 		"postgres", driver)
-
 	if err != nil {
-		log.Fatal(err)
+		logger.Info(err)
 	}
 	if err := migrate.Up(); err != nil {
-		log.Fatal(err)
+		logger.Info(err)
 	}
 }
