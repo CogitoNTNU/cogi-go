@@ -1,2 +1,0 @@
-ALTER TABLE temp_applications DROP CONSTRAINT temp_applications_email_key;
-ALTER TABLE temp_applications DROP CONSTRAINT temp_applications_phone_number_key;
