@@ -52,6 +52,6 @@ func (c *LocalDbConfig) loadDefault() (*LocalDbConfig, error) {
 
 func (a *Api) CorsNew(e *env.EnvConfig) gin.HandlerFunc {
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"https://cogito-ntnu.no"}
+	config.AllowOrigins = []string{"https://cogito-ntnu.no", "*"}
 	return cors.New(config)
 }

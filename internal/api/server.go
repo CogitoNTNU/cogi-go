@@ -47,13 +47,15 @@ func InitServer() (*Server, error) {
 	e := env.Configure(".env")
 	cors := cfg.CorsNew(e)
 
-	envVal, err := e.Read("ENVIRONMENT")
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
-	}
-	if envVal == env.PROD {
-		engine.Use(cors)
-	}
+	// envVal, err := e.Read("ENVIRONMENT")
+	// if err != nil {
+	// 	logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
+	// }
+	// if envVal == env.PROD {
+	// 	engine.Use(cors)
+	// }
+	// WARNING: This is a hack to enable CORS for apply. Make sure to handle CORS properly in production.
+	engine.Use(cors)
 
 	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
 
