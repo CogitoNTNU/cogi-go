@@ -8,12 +8,12 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 5s
       timeout: 3s
       retries: 20
     volumes:
-      - 'cogigo_data:/var/lib/postgresql/18/docker'
+      - "cogigo_data:/var/lib/postgresql/18/docker"
     networks:
       - proxy
   adminer:
@@ -50,6 +50,7 @@ services:
       SQL_USER: postgres
       SQL_PASSWORD: postgres
       SQL_DATABASE: postgres
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
     networks:
       - proxy
     labels:
