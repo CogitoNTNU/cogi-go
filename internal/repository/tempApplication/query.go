@@ -2,6 +2,7 @@ package tempApplicationRepository
 
 import (
 	"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -11,14 +12,14 @@ type queries struct {
 }
 
 type readQueries struct {
-	getTempApplication     *sqlx.NamedStmt
+	getTempApplication        *sqlx.NamedStmt
 	getTempApplicationByEmail *sqlx.NamedStmt
 	getAllTempApplications    *sqlx.NamedStmt
 }
 
 type writeQueries struct {
-	insertTempApplication  *sqlx.NamedStmt
-	deleteTempApplication  *sqlx.NamedStmt
+	insertTempApplication *sqlx.NamedStmt
+	deleteTempApplication *sqlx.NamedStmt
 }
 
 func PrepareQueries(db *sqlx.DB) (qs queries, err error) {

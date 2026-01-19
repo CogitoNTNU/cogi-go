@@ -8,10 +8,10 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
 	_ "github.com/CogitoNTNU/cogi-go/internal/repository/db"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
-	"github.com/sirupsen/logrus"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {

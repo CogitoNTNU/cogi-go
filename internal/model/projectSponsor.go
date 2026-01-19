@@ -10,5 +10,5 @@ type ProjectSponsor struct {
 	ProjectID uuid.UUID
 	SponsorID uuid.UUID
 	StartDate *time.Time
-	EndDate *time.Time
+	EndDate   *time.Time
 }

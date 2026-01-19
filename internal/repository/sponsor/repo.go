@@ -85,6 +85,6 @@ func (r *Repo) Close() (err error) {
 	if err != nil {
 		return fmt.Errorf("error closing queries %w", err)
 	}
-	
+
 	return
 }

@@ -12,10 +12,11 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
 	projectRepository "github.com/CogitoNTNU/cogi-go/internal/repository/project"
 	sponsorRepository "github.com/CogitoNTNU/cogi-go/internal/repository/sponsor"
+	tempApplicationRepository "github.com/CogitoNTNU/cogi-go/internal/repository/tempApplication"
 	userRepository "github.com/CogitoNTNU/cogi-go/internal/repository/user"
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
-	"github.com/appleboy/gin-jwt/v3"
+	jwt "github.com/appleboy/gin-jwt/v3"
 	"github.com/gin-gonic/gin"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/mbndr/figlet4go"
@@ -29,7 +30,7 @@ type Server struct {
 	cfg           *config.Api
 	Logger        *logrus.Entry
 	engine        *gin.Engine
-	env           *env.EnvConfig
+	Env           *env.EnvConfig
 	Ctx           *context.Context
 	db            *sql.DB
 	jwtMiddleware *jwt.GinJWTMiddleware
@@ -46,7 +47,11 @@ func InitServer() (*Server, error) {
 	e := env.Configure(".env")
 	cors := cfg.CorsNew(e)
 
-	if e.Read("ENVIRONMENT") == env.PROD {
+	envVal, err := e.Read("ENVIRONMENT")
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
+	}
+	if envVal == env.PROD {
 		engine.Use(cors)
 	}
 
@@ -68,7 +73,7 @@ func InitServer() (*Server, error) {
 		cfg:           cfg,
 		Logger:        logger,
 		engine:        engine,
-		env:           e,
+		Env:           e,
 		Ctx:           &ctx,
 		db:            database,
 		jwtMiddleware: authMiddleware,
@@ -92,29 +97,41 @@ func (s *Server) Serve() {
 
 	s.Logger.WithTime(time.Now()).Info("Performing health checks...")
 	sqlCheck := checks.SqlCheck{Sql: s.db}
-	healthcheck.New(s.engine, healthcheckConfig.DefaultConfig(), []checks.Check{sqlCheck})
+	err := healthcheck.New(s.engine, healthcheckConfig.DefaultConfig(), []checks.Check{sqlCheck})
+	if err != nil {
+		s.Logger.WithError(err).Error("Error serving on main port")
+		return
+	}
 
 	s.Logger.WithTime(time.Now()).Info("Registering routes...")
 
+	queryTimeoutLimit := time.Duration(5) * time.Second
+
 	// User endpoints
-	userRepository := userRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
-	userService := service.NewUserService(userRepository)
+	userRepository := userRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
+	userService := service.NewUserService(userRepository, s.Logger)
 	userHandler := handler.NewUserHandler(userService, s.Ctx)
 
 	// Project endpoints
-	projectRepository := projectRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
-	projectService := service.NewProjectService(projectRepository)
+	projectRepository := projectRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
+	projectService := service.NewProjectService(projectRepository, s.Logger)
 	projectHandler := handler.NewProjectHandler(projectService, s.Ctx)
 
 	// Sponsor endpoints
-	sponsorRepository := sponsorRepository.NewRepo(sqlxDb, time.Duration(5)*time.Second, s.Logger)
-	sponsorService := service.NewSponsorService(sponsorRepository)
+	sponsorRepository := sponsorRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
+	sponsorService := service.NewSponsorService(sponsorRepository, s.Logger)
 	sponsorHandler := handler.NewSponsorHandler(sponsorService, s.Ctx)
 
+	// Temp Member Application endpoints
+	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
+	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, s.Logger)
+	tempApplicationHandler := handler.NewTempApplicationHandler(templateApplicationService, s.Ctx, s.Env)
+
 	handlers := &routes.Handlers{
-		User:    userHandler,
-		Project: projectHandler,
-		Sponsor: sponsorHandler,
+		User:            userHandler,
+		Project:         projectHandler,
+		Sponsor:         sponsorHandler,
+		TempApplication: tempApplicationHandler,
 	}
 
 	routes.RegisterPublicRoutes(s.engine, handlers)
@@ -122,11 +139,14 @@ func (s *Server) Serve() {
 	routes.RegisterAdminRoutes(s.engine)
 
 	s.Logger.WithContext(*s.Ctx).Info("Initialization Complete! \n")
-	s.engine.Run(fmt.Sprintf(":%d", s.cfg.MainPort))
+	err = s.engine.Run(fmt.Sprintf(":%d", s.cfg.MainPort))
+	if err != nil {
+		s.Logger.WithError(err).Error("Error serving on main port")
+		return
+	}
 }
 
 func initParams() *jwt.GinJWTMiddleware {
-
 	return &jwt.GinJWTMiddleware{
 		Realm:      "example zone",
 		Key:        []byte("secret key"),

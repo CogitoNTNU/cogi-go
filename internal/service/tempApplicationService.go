@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"net/http"
-	"fmt"
 	"encoding/csv"
-	"github.com/gin-gonic/gin"
+	"net/http"
+	"strings"
 
+	"github.com/CogitoNTNU/cogi-go/internal/api/dto"
 	"github.com/CogitoNTNU/cogi-go/internal/model"
 	tempApplicationRepository "github.com/CogitoNTNU/cogi-go/internal/repository/tempApplication"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,12 +18,25 @@ type TempApplication struct {
 	repository *tempApplicationRepository.Repo
 }
 
-func NewTempApplicationService(tempApplicationRepository *tempApplicationRepository.Repo) *TempApplication {
-	return &TempApplication{repository: tempApplicationRepository}
+func NewTempApplicationService(tempApplicationRepository *tempApplicationRepository.Repo, logger *logrus.Entry) *TempApplication {
+	return &TempApplication{
+		repository: tempApplicationRepository,
+		logger:     logger,
+	}
 }
 
-func (ta *TempApplication) ExportTempApplicationsCSV(ctx *context.Context, responseWriter gin.ResponseWriter) (*model.ErrorResponse) {
-	tempApplications, errResp := ta.repository.GetAllTempApplications(ctx)
+func (t *TempApplication) CreateTempApplication(ctx *context.Context, tempApplication *dto.CreateTempApplicationRequest) *model.ErrorResponse {
+	err := t.repository.InsertTempApplication(ctx, tempApplication)
+	if err != nil {
+		t.logger.Errorf("An error has occured when creating a temporary application.")
+		return err
+	}
+
+	return nil
+}
+
+func (t *TempApplication) ExportTempApplicationsCSV(ctx *context.Context, responseWriter gin.ResponseWriter) *model.ErrorResponse {
+	tempApplications, errResp := t.repository.GetAllTempApplications(ctx)
 	if errResp != nil {
 		return errResp
 	}
@@ -30,9 +44,11 @@ func (ta *TempApplication) ExportTempApplicationsCSV(ctx *context.Context, respo
 	csvData := make([][]string, len(tempApplications))
 	for i, tempApplication := range tempApplications {
 		csvData[i] = []string{
+			tempApplication.FirstName,
+			tempApplication.LastName,
 			tempApplication.Email,
 			tempApplication.PhoneNumber,
-			fmt.Sprintf("%v", tempApplication.Projects), // Convert slice to string
+			strings.Join(tempApplication.Projects, ", "),
 			tempApplication.ApplicationText,
 		}
 	}
@@ -57,24 +73,4 @@ func (ta *TempApplication) ExportTempApplicationsCSV(ctx *context.Context, respo
 	}
 
 	return nil
-}
-
-func (ta *TempApplication) InsertTempApplication(ctx *context.Context, tempApplication *model.TempApplication) *model.ErrorResponse {
-	errResp := ta.repository.InsertTempApplication(ctx, tempApplication)
-	if errResp != nil {
-		ta.logger.Errorf("An error has occured when inserting a temp application. Error code: %s", errResp.Code)
-		return errResp
-	}
-
-	return nil
-}
-
-func (ta *TempApplication) GetAllTempApplicationsCSV(ctx *context.Context) ([]model.TempApplication,*model.ErrorResponse) {
-	tempApplications, errResp := ta.repository.GetAllTempApplications(ctx)
-	if errResp != nil {
-		ta.logger.Errorf("An error has occured when exporting temp applications to CSV. Error code: %s", errResp.Code)
-		return nil, errResp
-	}
-
-	return tempApplications, nil
 }

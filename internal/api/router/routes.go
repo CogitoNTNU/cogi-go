@@ -7,9 +7,10 @@ import (
 )
 
 type Handlers struct {
-	User    *handler.User
-	Project *handler.Project
-	Sponsor *handler.Sponsor
+	User            *handler.User
+	Project         *handler.Project
+	Sponsor         *handler.Sponsor
+	TempApplication *handler.TempApplication
 }
 
 func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
@@ -32,6 +33,12 @@ func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 		sponsors.GET("", handlers.Sponsor.GetAllSponsors)
 		sponsors.GET("/:id", handlers.Sponsor.GetSponsorByID)
 	}
+
+	tempApplication := api.Group("/temp-member-application")
+	{
+		tempApplication.POST("/", handlers.TempApplication.CreateTempApplication)
+		tempApplication.GET("/export-csv", handlers.TempApplication.ExportTempApplicationsCSV)
+	}
 }
 
 func RegisterPrivateRoutes(router *gin.Engine, register *jwt.GinJWTMiddleware, handlers *Handlers) {
@@ -44,5 +51,4 @@ func RegisterPrivateRoutes(router *gin.Engine, register *jwt.GinJWTMiddleware, h
 }
 
 func RegisterAdminRoutes(router *gin.Engine) {
-
 }

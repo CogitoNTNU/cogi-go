@@ -17,7 +17,7 @@ type Api struct {
 
 func LoadApiConfig() *Api {
 	var cfg Api = Api{
-		AppName: "COGI-GO!!",
+		AppName:  "COGI-GO!!",
 		MainPort: 8080,
 	}
 	return &cfg

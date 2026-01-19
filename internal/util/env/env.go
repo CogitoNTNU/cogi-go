@@ -1,11 +1,13 @@
 package env
 
-import "github.com/sirupsen/logrus"
-
 import (
-	"github.com/spf13/viper"
+	"fmt"
 	"os"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
+
 var (
 	PROD string = "PRODUCTION"
 	DEV  string = "DEVELOPMENT"
@@ -13,35 +15,36 @@ var (
 
 type EnvConfig struct {
 	env_path string
-  logger *logrus.Logger
+	logger   *logrus.Logger
 }
 
 func Configure(path string) *EnvConfig {
-  return &EnvConfig{
-    env_path: path,
-    logger:   logrus.New(),
-  }
+	return &EnvConfig{
+		env_path: path,
+		logger:   logrus.New(),
+	}
 }
 
-func (p *EnvConfig) Read(key string) (value string) {
-    logger := p.logger
-    
-    if value := os.Getenv(key); value != "" {
-        return value
-    }
+func (p *EnvConfig) Read(key string) (value string, err error) {
+	if value := os.Getenv(key); value != "" {
+		return value, nil
+	}
 
-    viper.SetConfigFile(p.env_path)
-    err := viper.ReadInConfig()
+	viper.SetConfigFile(p.env_path)
+	err = viper.ReadInConfig()
+	if err != nil {
+		return "", fmt.Errorf("couldn't read config file: %w", err)
+	}
 
-    if err != nil {
-        logger.WithError(err).Fatal("Couldn't intialize and find environmental variable.")
-    }
+	if !viper.IsSet(key) {
+		return "", fmt.Errorf("key %q not found in config", key)
+	}
 
-    value, ok := viper.Get(key).(string)
+	value, ok := viper.Get(key).(string)
 
-    if !ok {
-        logger.Fatal("Invalid type assertion on value from env.")
-    }
+	if !ok {
+		return "", fmt.Errorf("invalid type assertion on value for key %q from env", key)
+	}
 
-    return value
+	return value, nil
 }

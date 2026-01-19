@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CogitoNTNU/cogi-go/internal/api/dto"
 	"github.com/CogitoNTNU/cogi-go/internal/model"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
 	"github.com/google/uuid"
@@ -22,7 +23,6 @@ type Repo struct {
 
 func NewRepo(db *sqlx.DB, queryTimeoutLimit time.Duration, logger *logrus.Entry) *Repo {
 	queries, err := PrepareQueries(db)
-
 	if err != nil {
 		logger.Fatalf("Failed to prepare queries: %s", err)
 	}
@@ -59,19 +59,21 @@ func (r *Repo) GetAllTempApplications(ctx *context.Context) ([]model.TempApplica
 	return tempApplications, nil
 }
 
-
-func (r *Repo) InsertTempApplication(ctx *context.Context, tempApplication *model.TempApplication) *model.ErrorResponse {
+func (r *Repo) InsertTempApplication(ctx *context.Context, tempApplication *dto.CreateTempApplicationRequest) *model.ErrorResponse {
 	cCtx, cancel := context.WithTimeout(*ctx, r.queryTimeoutLimit)
 	defer cancel()
-	
+
 	createdAt := time.Now()
+
 	dbTempApplication := db.TempApplication{
-		Id:                uuid.New(),
-		Email:             tempApplication.Email,
-		PhoneNumber:       tempApplication.PhoneNumber,
-		Projects:          tempApplication.Projects,
-		ApplicationText:   tempApplication.ApplicationText,
-		CreatedAt:         &createdAt,
+		Id:              uuid.New(),
+		FirstName:       tempApplication.FirstName,
+		LastName:        tempApplication.LastName,
+		Email:           tempApplication.Email,
+		PhoneNumber:     tempApplication.PhoneNumber,
+		Projects:        tempApplication.Projects,
+		ApplicationText: tempApplication.ApplicationText,
+		CreatedAt:       &createdAt,
 	}
 
 	_, err := r.queries.Write.insertTempApplication.ExecContext(cCtx, dbTempApplication)

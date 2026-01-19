@@ -8,15 +8,15 @@ type SponsorLevel string
 
 const (
 	SponsorLevelBronze SponsorLevel = "bronze"
-	SponsorLevelSilver  SponsorLevel = "silver"
-	SponsorLevelGold    SponsorLevel = "gold"
+	SponsorLevelSilver SponsorLevel = "silver"
+	SponsorLevelGold   SponsorLevel = "gold"
 )
 
 type Sponsor struct {
-	Id        uuid.UUID
-	Name      string
-	Logo      *string
-	Website   *string
+	Id          uuid.UUID
+	Name        string
+	Logo        *string
+	Website     *string
 	Description string
-	Level     SponsorLevel
+	Level       SponsorLevel
 }

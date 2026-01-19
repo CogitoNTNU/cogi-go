@@ -1,18 +1,10 @@
-package model
+package dto
 
-import (
-	"time"
-
-	"github.com/google/uuid"
-)
-
-type TempApplication struct {
-	Id              uuid.UUID
+type CreateTempApplicationRequest struct {
 	FirstName       string
 	LastName        string
 	Email           string
 	PhoneNumber     string
 	Projects        []string
 	ApplicationText string
-	CreatedAt       *time.Time
 }
