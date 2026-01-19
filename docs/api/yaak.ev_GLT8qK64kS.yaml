@@ -3,12 +3,16 @@ model: environment
 id: ev_GLT8qK64kS
 workspaceId: wk_rxdC9r7YRV
 createdAt: 2026-01-18T22:28:35.608558
-updatedAt: 2026-01-18T22:31:31.922201
+updatedAt: 2026-01-18T23:21:26.173735
 name: Global Variables
 public: true
 base: true
 parentModel: workspace
 parentId: null
-variables: []
+variables:
+- enabled: true
+  name: url
+  value: ''
+  id: FwTcDvBhtQ
 color: null
 sortPriority: 0.0
