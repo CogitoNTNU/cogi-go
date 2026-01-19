@@ -27,3 +27,9 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/cogitontnu/cogi-go:latest
+
+      - name: Create .env file for compose
+        run: |
+          cat <<EOF > .env
+          ADMIN_TOKEN=${{ secrets.ADMIN_TOKEN }}
+          EOF
