@@ -45,7 +45,7 @@ func InitServer() (*Server, error) {
 	engine.RedirectTrailingSlash = false
 	engine.RedirectFixedPath = false
 	corscfg := cors.DefaultConfig()
-	corscfg.AllowOrigins = []string{"http://localhost:3000", "https://cogito-ntnu.no"}
+	corscfg.AllowOrigins = []string{"http://localhost:3000", "https://cogito-ntnu.no", "*"}
 	corscfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	corscfg.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 	corscfg.AllowCredentials = true
