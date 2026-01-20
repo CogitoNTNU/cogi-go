@@ -50,6 +50,7 @@ func (t *TempApplication) ExportTempApplicationsCSV(ctx *context.Context, respon
 			tempApplication.PhoneNumber,
 			strings.Join(tempApplication.Projects, ", "),
 			tempApplication.ApplicationText,
+			tempApplication.CreatedAt.Local().String(),
 		}
 	}
 
