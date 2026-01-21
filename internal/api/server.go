@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	routes "github.com/CogitoNTNU/cogi-go/internal/api/router"
@@ -17,14 +19,15 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
 	jwt "github.com/appleboy/gin-jwt/v3"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	gojwt "github.com/golang-jwt/jwt/v5"
+	"github.com/jmoiron/sqlx"
 	"github.com/mbndr/figlet4go"
 	"github.com/sirupsen/logrus"
 	healthcheck "github.com/tavsec/gin-healthcheck"
 	"github.com/tavsec/gin-healthcheck/checks"
 	healthcheckConfig "github.com/tavsec/gin-healthcheck/config"
+	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 type Server struct {
@@ -40,46 +43,47 @@ type Server struct {
 func InitServer() (*Server, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
-
-	// TODO: FIX HACKY CORS CONFIG
-	engine.RedirectTrailingSlash = false
-	engine.RedirectFixedPath = false
-	corscfg := cors.DefaultConfig()
-	corscfg.AllowOrigins = []string{"http://localhost:3000", "https://cogito-ntnu.no", "*"}
-	corscfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	corscfg.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
-	corscfg.AllowCredentials = true
-	corscfg.MaxAge = 12 * time.Hour
-	engine.Use(cors.New(corscfg))
-	// cors := cfg.CorsNew(e)
-	// envVal, err := e.Read("ENVIRONMENT")
-	// if err != nil {
-	// 	logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
-	// }
-	// if envVal == env.PROD {
-	// }
-	// engine.Use(cors)
+	// engine.RedirectTrailingSlash = false
+	// engine.RedirectFixedPath = false
 
 	ctx := context.Background()
-	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
-	defer cancel()
-
 	cfg := config.LoadApiConfig()
 	e := env.Configure(".env")
 
 	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
 
+	cors := cfg.CorsNew()
+	envVal, err := e.Read("ENVIRONMENT")
+	if err != nil {
+		logger.Fatalf("Failed to read ENVIRONMENT from env")
+	}
+	if envVal == env.PROD {
+		engine.Use(cors)
+	}
+
+	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
+	defer cancel()
+
 	authMiddleware, err := jwt.New(initParams())
 	if err != nil {
-		logger.Infof("JWT Error: %s", err.Error())
+		logger.Fatalf("JWT Error: %s", err.Error())
 	}
 
 	err = authMiddleware.MiddlewareInit()
 	if err != nil {
-		logger.Infof("authMiddleware.MiddlewareInit() Error: %s", err.Error())
+		logger.Fatalf("authMiddleware.MiddlewareInit() Error: %s", err.Error())
 	}
 
 	database, err := db.InitDb(e, logger, queryCtx)
+	if err != nil {
+		logger.Fatalf("Failed to initialize database: %s", err.Error())
+	}
+
+	smtpClient, err := initSMTPClient(e)
+	if err != nil {
+		logger.Fatalf("Failed to initialize SMTP client: %s", err.Error())
+	}
+	engine.Use(SMTPMiddleware(smtpClient))
 
 	return &Server{
 		cfg:           cfg,
@@ -99,9 +103,9 @@ func (s *Server) Serve() {
 	s.Logger.Info("\n \n" + render + "\n \n")
 
 	s.Logger.WithTime(time.Now()).Info("Starting database...")
-	sqlxDb := db.ExportDb(s.db) // TODO: Inject sqlxDb into repositories which are then used by services -> handlers
+	sqlxDB := db.ExportDb(s.db)
 	defer func() {
-		if err := sqlxDb.Close(); err != nil {
+		if err := sqlxDB.Close(); err != nil {
 			s.Logger.WithError(err).Error("Failed to close sqlx database connection")
 			return
 		}
@@ -116,42 +120,13 @@ func (s *Server) Serve() {
 	}
 
 	s.Logger.WithTime(time.Now()).Info("Registering routes...")
-
-	queryTimeoutLimit := time.Duration(5) * time.Second
-
-	// User endpoints
-	userRepository := userRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	userService := service.NewUserService(userRepository, s.Logger)
-	userHandler := handler.NewUserHandler(userService, s.Ctx)
-
-	// Project endpoints
-	projectRepository := projectRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	projectService := service.NewProjectService(projectRepository, s.Logger)
-	projectHandler := handler.NewProjectHandler(projectService, s.Ctx)
-
-	// Sponsor endpoints
-	sponsorRepository := sponsorRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	sponsorService := service.NewSponsorService(sponsorRepository, s.Logger)
-	sponsorHandler := handler.NewSponsorHandler(sponsorService, s.Ctx)
-
-	// Temp Member Application endpoints
-	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, s.Logger)
-	tempApplicationHandler := handler.NewTempApplicationHandler(templateApplicationService, s.Ctx, s.Env)
-
-	handlers := &routes.Handlers{
-		User:            userHandler,
-		Project:         projectHandler,
-		Sponsor:         sponsorHandler,
-		TempApplication: tempApplicationHandler,
-	}
-
+	handlers := routerHandlers(sqlxDB, s.Logger, s.Ctx, s.Env)
 	routes.RegisterPublicRoutes(s.engine, handlers)
 	routes.RegisterPrivateRoutes(s.engine, s.jwtMiddleware, handlers)
 	routes.RegisterAdminRoutes(s.engine)
 
-	s.Logger.WithContext(*s.Ctx).Info("Initialization Complete! \n")
 	err = s.engine.Run(fmt.Sprintf(":%d", s.cfg.MainPort))
+	s.Logger.WithContext(*s.Ctx).Info("Initialization Complete! \n")
 	if err != nil {
 		s.Logger.WithError(err).Error("Error serving on main port")
 		return
@@ -170,6 +145,94 @@ func initParams() *jwt.GinJWTMiddleware {
 			}
 		},
 	}
+}
+
+func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context, env *env.EnvConfig) *routes.Handlers {
+	queryTimeoutLimit := time.Duration(5) * time.Second
+	userRepository := userRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	userService := service.NewUserService(userRepository, logger)
+	userHandler := handler.NewUserHandler(userService, ctx)
+
+	projectRepository := projectRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	projectService := service.NewProjectService(projectRepository, logger)
+	projectHandler := handler.NewProjectHandler(projectService, ctx)
+
+	sponsorRepository := sponsorRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	sponsorService := service.NewSponsorService(sponsorRepository, logger)
+	sponsorHandler := handler.NewSponsorHandler(sponsorService, ctx)
+
+	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, logger)
+
+	// TODO: Use Gin Context for env
+	tempApplicationHandler := handler.NewTempApplicationHandler(templateApplicationService, ctx, env)
+
+	return &routes.Handlers{
+		User:            userHandler,
+		Project:         projectHandler,
+		Sponsor:         sponsorHandler,
+		TempApplication: tempApplicationHandler,
+	}
+}
+
+func SMTPMiddleware(smtpClient *mail.SMTPClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("smtp_client", smtpClient)
+		c.Next()
+	}
+}
+
+func initSMTPClient(e *env.EnvConfig) (*mail.SMTPClient, error) {
+	server := mail.NewSMTPClient()
+
+	serverHost, err := e.Read("SMTP_HOST")
+	if err != nil {
+		return nil, err
+	}
+	server.Host = serverHost
+
+	serverPort, err := e.Read("SMTP_PORT")
+	if err != nil {
+		return nil, err
+	}
+	server.Port, err = strconv.Atoi(serverPort)
+	if err != nil {
+		return nil, err
+	}
+
+	serverUser, err := e.Read("SMTP_USER")
+	if err != nil {
+		return nil, err
+	}
+	server.Username = serverUser
+
+	serverPassword, err := e.Read("SMTP_PASSWORD")
+	if err != nil {
+		return nil, err
+	}
+	server.Password = serverPassword
+
+	serverEncryption, err := e.Read("SMTP_ENCRYPTION")
+	if err != nil {
+		return nil, err
+	}
+	serverEncryptionInt, err := strconv.Atoi(serverEncryption)
+	if err != nil {
+		return nil, err
+	}
+	server.Encryption = mail.Encryption(serverEncryptionInt)
+
+	server.KeepAlive = true
+	server.ConnectTimeout = 10 * time.Second
+	server.SendTimeout = 10 * time.Second
+	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	smtpClient, err := server.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	return smtpClient, nil
 }
 
 func renderAscii(input string) string {

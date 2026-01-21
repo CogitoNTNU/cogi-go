@@ -1,6 +1,6 @@
 # COGI-GO!! The Cogito NTNU Web Backend
-Backend for [Cogito-NTNU](https://cogito-ntnu.no)
 
+Backend for [Cogito-NTNU](https://cogito-ntnu.no)
 
 <img src="./misc/img/cogi-go!!.png" width="400px;"/><br />
 
@@ -42,7 +42,7 @@ Before you begin, ensure you have the following installed on your machine:
 git clone https://github.com/CogitoNTNU/cogi-go.git
 ```
 
-2. Change into the directory
+1. Change into the directory
 
 ```bash
 cd cogi-go
@@ -56,6 +56,25 @@ To start the development server, run:
 make cogigo-dev
 make migrate
 ```
+
+### Configuration
+
+To setup email sending, you need to populate the environmental variables in the .example.env file.
+
+```
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_ENCRYPTION=
+```
+
+`SMTP_ENCRYPTION` is an ENUM that follows:
+0 - No encryption
+1 - DEPRECATED: Only SSL
+2 - DEPRECATED: Only TLS
+3 - SSLTLS
+4 - STARTTLS
 
 ## Technologies Used
 

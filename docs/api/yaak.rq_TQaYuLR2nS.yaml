@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_TQaYuLR2nS
 createdAt: 2026-01-19T00:01:30.484914
-updatedAt: 2026-01-19T00:26:00.410549
+updatedAt: 2026-01-20T15:25:18.279836
 workspaceId: wk_rxdC9r7YRV
 folderId: fl_G5jfP9bvDh
 authentication: {}
@@ -13,12 +13,12 @@ description: ''
 headers:
 - enabled: true
   name: X-Admin-Token
-  value: test-token-123
+  value: COGI-GO
   id: 4W0fkqCe2e
 - enabled: true
   name: ''
   value: ''
-  id: S0acdQWHpp
+  id: Ty5gAqRUEF
 method: GET
 name: Get CSV
 sortPriority: -0.0002
