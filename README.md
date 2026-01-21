@@ -69,11 +69,11 @@ SMTP_PASSWORD=
 SMTP_ENCRYPTION=
 ```
 
-`SMTP_ENCRYPTION` is an ENUM that follows:
-0 - No encryption
-1 - DEPRECATED: Only SSL
-2 - DEPRECATED: Only TLS
-3 - SSLTLS
+`SMTP_ENCRYPTION` is an ENUM that follows:\
+0 - No encryption\
+1 - DEPRECATED: Only SSL\
+2 - DEPRECATED: Only TLS\
+3 - SSLTLS\
 4 - STARTTLS
 
 ## Technologies Used
