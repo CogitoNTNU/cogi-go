@@ -31,8 +31,8 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 	}
 
 	err := t.service.CreateTempApplication(t.ctx, &req)
+	gCtx.AbortWithStatusJSON(err.Code, err.Message)
 	if err != nil {
-		gCtx.AbortWithStatusJSON(err.Code, err.Message)
 		return
 	}
 
@@ -41,12 +41,10 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 
 	if email.Error != nil {
 		gCtx.JSON(http.StatusInternalServerError, "Something went wrong when creating the reply email.")
-		return
 	}
 
 	if err := email.Send(smtpClient); err != nil {
 		gCtx.JSON(http.StatusInternalServerError, "Something went wrong when sending the reply email.")
-		return
 	}
 
 	gCtx.Status(http.StatusCreated)
