@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	routes "github.com/CogitoNTNU/cogi-go/internal/api/router"
@@ -25,6 +27,7 @@ import (
 	healthcheck "github.com/tavsec/gin-healthcheck"
 	"github.com/tavsec/gin-healthcheck/checks"
 	healthcheckConfig "github.com/tavsec/gin-healthcheck/config"
+	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 type Server struct {
@@ -43,35 +46,44 @@ func InitServer() (*Server, error) {
 	// engine.RedirectTrailingSlash = false
 	// engine.RedirectFixedPath = false
 
+	ctx := context.Background()
 	cfg := config.LoadApiConfig()
 	e := env.Configure(".env")
+
+	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
 
 	cors := cfg.CorsNew()
 	envVal, err := e.Read("ENVIRONMENT")
 	if err != nil {
-		logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
+		logger.Fatalf("Failed to read ENVIRONMENT from env")
 	}
 	if envVal == env.PROD {
 		engine.Use(cors)
 	}
 
-	ctx := context.Background()
 	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
 	defer cancel()
 
-	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
-
 	authMiddleware, err := jwt.New(initParams())
 	if err != nil {
-		logger.Infof("JWT Error: %s", err.Error())
+		logger.Fatalf("JWT Error: %s", err.Error())
 	}
 
 	err = authMiddleware.MiddlewareInit()
 	if err != nil {
-		logger.Infof("authMiddleware.MiddlewareInit() Error: %s", err.Error())
+		logger.Fatalf("authMiddleware.MiddlewareInit() Error: %s", err.Error())
 	}
 
 	database, err := db.InitDb(e, logger, queryCtx)
+	if err != nil {
+		logger.Fatalf("Failed to initialize database: %s", err.Error())
+	}
+
+	smtpClient, err := initSMTPClient(e)
+	if err != nil {
+		logger.Fatalf("Failed to initialize SMTP client: %s", err.Error())
+	}
+	engine.Use(SMTPMiddleware(smtpClient))
 
 	return &Server{
 		cfg:           cfg,
@@ -91,7 +103,7 @@ func (s *Server) Serve() {
 	s.Logger.Info("\n \n" + render + "\n \n")
 
 	s.Logger.WithTime(time.Now()).Info("Starting database...")
-	sqlxDB := db.ExportDb(s.db) // TODO: Inject sqlxDb into repositories which are then used by services -> handlers
+	sqlxDB := db.ExportDb(s.db)
 	defer func() {
 		if err := sqlxDB.Close(); err != nil {
 			s.Logger.WithError(err).Error("Failed to close sqlx database connection")
@@ -109,7 +121,6 @@ func (s *Server) Serve() {
 
 	s.Logger.WithTime(time.Now()).Info("Registering routes...")
 	handlers := routerHandlers(sqlxDB, s.Logger, s.Ctx, s.Env)
-
 	routes.RegisterPublicRoutes(s.engine, handlers)
 	routes.RegisterPrivateRoutes(s.engine, s.jwtMiddleware, handlers)
 	routes.RegisterAdminRoutes(s.engine)
@@ -153,7 +164,7 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
 	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, logger)
 
-	// TODO: Inject env into gin
+	// TODO: Use Gin Context for env
 	tempApplicationHandler := handler.NewTempApplicationHandler(templateApplicationService, ctx, env)
 
 	return &routes.Handlers{
@@ -162,6 +173,57 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 		Sponsor:         sponsorHandler,
 		TempApplication: tempApplicationHandler,
 	}
+}
+
+func SMTPMiddleware(smtpClient *mail.SMTPClient) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("smtp_client", smtpClient)
+		c.Next()
+	}
+}
+
+func initSMTPClient(e *env.EnvConfig) (*mail.SMTPClient, error) {
+	server := mail.NewSMTPClient()
+
+	serverHost, err := e.Read("SMTP_HOST")
+	if err != nil {
+		return nil, err
+	}
+	server.Host = serverHost
+
+	serverPort, err := e.Read("SMTP_PORT")
+	if err != nil {
+		return nil, err
+	}
+	server.Port, err = strconv.Atoi(serverPort)
+	if err != nil {
+		return nil, err
+	}
+
+	serverUser, err := e.Read("SMTP_USER")
+	if err != nil {
+		return nil, err
+	}
+	server.Username = serverUser
+
+	serverPassword, err := e.Read("SMTP_PASSWORD")
+	if err != nil {
+		return nil, err
+	}
+	server.Password = serverPassword
+
+	server.Encryption = mail.EncryptionSTARTTLS
+	server.KeepAlive = true
+	server.ConnectTimeout = 10 * time.Second
+	server.SendTimeout = 10 * time.Second
+	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+
+	smtpClient, err := server.Connect()
+	if err != nil {
+		return nil, err
+	}
+
+	return smtpClient, nil
 }
 
 func renderAscii(input string) string {
