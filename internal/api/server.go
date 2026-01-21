@@ -212,7 +212,16 @@ func initSMTPClient(e *env.EnvConfig) (*mail.SMTPClient, error) {
 	}
 	server.Password = serverPassword
 
-	server.Encryption = mail.EncryptionSTARTTLS
+	serverEncryption, err := e.Read("SMTP_ENCRYPTION")
+	if err != nil {
+		return nil, err
+	}
+	serverEncryptionInt, err := strconv.Atoi(serverEncryption)
+	if err != nil {
+		return nil, err
+	}
+	server.Encryption = mail.Encryption(serverEncryptionInt)
+
 	server.KeepAlive = true
 	server.ConnectTimeout = 10 * time.Second
 	server.SendTimeout = 10 * time.Second
