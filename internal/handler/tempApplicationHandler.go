@@ -41,11 +41,10 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 
 	if email.Error != nil {
 		gCtx.JSON(http.StatusInternalServerError, "Something went wrong when creating the reply email.")
-		fmt.Println(email.Error)
 		return
 	}
 
-	if email.Send(smtpClient) != nil {
+	if err := email.Send(smtpClient); err != nil {
 		gCtx.JSON(http.StatusInternalServerError, "Something went wrong when sending the reply email.")
 		return
 	}
@@ -80,7 +79,7 @@ func (t *TempApplication) ExportTempApplicationsCSV(gCtx *gin.Context) {
 
 func applicationReplyEmail(req *dto.CreateTempApplicationRequest) *mail.Email {
 	email := mail.NewMSG()
-	email.SetFrom("noreply@cogio-ntnu.no").AddTo(req.Email).SetSubject("Thank you for your project application to Cogito NTNU!")
+	email.SetFrom("no-reply@cogito-ntnu.no").AddTo(req.Email).SetSubject("Thank you for your project application to Cogito NTNU!")
 
 	body := fmt.Sprintf(`<!DOCTYPE html>
 <html>
@@ -100,21 +99,23 @@ func applicationReplyEmail(req *dto.CreateTempApplicationRequest) *mail.Email {
     </div>
     <div class="content">
         <p>Dear %s,</p>
-        <p>Thank you for applying to Cogito NTNU!</p>
+        <strong>Thank you for applying to Cogito NTNU!</strong>
         <p>We've received your application and we will review it shortly after the deadline passes the <strong>6th of February</strong>.</p>
         <div class="projects">
             <strong>The projects you applied to:</strong><br>
+            %s<br><br> 
+            <strong>Application text</strong><br>
             %s
         </div>
-        <p>Is something not quite right or do you have any questions? Please reply to styret@cogito-ntnu.no</p>
-        <p>Best regards,<br><strong>The Cogito NTNU Board</strong></p>
+		<p>Best regards,<br><strong>The Cogito NTNU Board</strong></p>
+		<p>Something not quite right? Send in a new application 😄</p>
     </div>
     <div class="footer">
 		<p>This is an automatic reply. If you want to contact us, please use:</p>
         <p>styret@cogito-ntnu.no</p>
     </div>
 </body>
-</html>`, req.FirstName, strings.Join(req.Projects, "<br>"))
+</html>`, req.FirstName, strings.Join(req.Projects, "<br>"), req.ApplicationText)
 	email.SetBody(mail.TextHTML, body)
 
 	return email
