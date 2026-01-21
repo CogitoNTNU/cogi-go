@@ -79,11 +79,11 @@ func InitServer() (*Server, error) {
 		logger.Fatalf("Failed to initialize database: %s", err.Error())
 	}
 
-	smtpClient, err := initSMTPClient(e)
+	smtpServer, err := initSMTPServer(e)
 	if err != nil {
 		logger.Fatalf("Failed to initialize SMTP client: %s", err.Error())
 	}
-	engine.Use(SMTPMiddleware(smtpClient))
+	engine.Use(SMTPMiddleware(smtpServer))
 
 	return &Server{
 		cfg:           cfg,
@@ -175,14 +175,14 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 	}
 }
 
-func SMTPMiddleware(smtpClient *mail.SMTPClient) gin.HandlerFunc {
+func SMTPMiddleware(server *mail.SMTPServer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("smtp_client", smtpClient)
+		c.Set("smtp_server", server)
 		c.Next()
 	}
 }
 
-func initSMTPClient(e *env.EnvConfig) (*mail.SMTPClient, error) {
+func initSMTPServer(e *env.EnvConfig) (*mail.SMTPServer, error) {
 	server := mail.NewSMTPClient()
 
 	serverHost, err := e.Read("SMTP_HOST")
@@ -221,16 +221,10 @@ func initSMTPClient(e *env.EnvConfig) (*mail.SMTPClient, error) {
 		return nil, err
 	}
 	server.Encryption = mail.Encryption(serverEncryptionInt)
-
 	server.KeepAlive = true
 	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
-	smtpClient, err := server.Connect()
-	if err != nil {
-		return nil, err
-	}
-
-	return smtpClient, nil
+	return server, nil
 }
 
 func renderAscii(input string) string {

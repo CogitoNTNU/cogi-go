@@ -36,10 +36,17 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 		return
 	}
 
-	smtpClient := gCtx.MustGet("smtp_client").(*mail.SMTPClient)
+	smtpServer := gCtx.MustGet("smtp_server").(*mail.SMTPServer)
+	smtpClient, smtpErr := smtpServer.Connect()
+	if smtpErr != nil {
+		fmt.Printf("Could not connect to SMTP server: %v\n", err)
+	}
+
 	email := applicationReplyEmail(&req)
 
-	email.Send(smtpClient)
+	if err := email.Send(smtpClient); err != nil {
+		fmt.Printf("Could not send email to %s: %v\n", req.Email, err)
+	}
 
 	gCtx.Status(http.StatusCreated)
 }
