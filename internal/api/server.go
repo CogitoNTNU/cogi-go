@@ -223,8 +223,6 @@ func initSMTPClient(e *env.EnvConfig) (*mail.SMTPClient, error) {
 	server.Encryption = mail.Encryption(serverEncryptionInt)
 
 	server.KeepAlive = true
-	server.ConnectTimeout = 10 * time.Second
-	server.SendTimeout = 10 * time.Second
 	server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	smtpClient, err := server.Connect()

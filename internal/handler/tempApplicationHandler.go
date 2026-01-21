@@ -78,17 +78,13 @@ func applicationReplyEmail(req *dto.CreateTempApplicationRequest) *mail.Email {
 <head>
     <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.8; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-				.header { text-align: center; margin-bottom: 30px; font-size: 14px; }
         .logo { max-width: 150px; height: auto; }
         .content { background-color: #f9f9f9; padding: 25px; border-radius: 8px; }
 				.projects { background-color: #1e90ff; padding: 15px; border-radius: 5px; margin: 20px 0; color: #ffffff; }
-        .footer { text-align: center; margin-top: 30px; font-size: 14px; color: #888; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #888; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="https://cogito-ntnu.no/logo.png" alt="Cogito NTNU" class="logo">
-    </div>
     <div class="content">
         <p>Dear %s,</p>
         <strong>Thank you for applying to Cogito NTNU!</strong>
