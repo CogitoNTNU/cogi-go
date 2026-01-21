@@ -37,14 +37,11 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 	}
 
 	smtpClient := gCtx.MustGet("smtp_client").(*mail.SMTPClient)
-	email := mail.NewMSG()
-	email.SetFrom("From noreply@cogito-ntnu.no <noreply@cogito-ntnu.no>").AddTo(req.Email).SetSubject("Thank you for your project application to Cogito NTNU!")
-
-	body := fmt.Sprintf("Dear %s,\n\nThank you for your application to join Cogito NTNU!\n We have registered your wish to join the projects: %s. Please send us a mail at styret@cogito-ntnu.no if something is wrong.\n\nBest Regards,\nCogito NTNU Board", req.FirstName, strings.Join(req.Projects, ", "))
-	email.SetBody(mail.TextHTML, body)
+	email := applicationReplyEmail(&req)
 
 	if email.Error != nil {
 		gCtx.JSON(http.StatusInternalServerError, "Something went wrong when creating the reply email.")
+		fmt.Println(email.Error)
 		return
 	}
 
@@ -79,4 +76,46 @@ func (t *TempApplication) ExportTempApplicationsCSV(gCtx *gin.Context) {
 		gCtx.AbortWithStatusJSON(errResp.Code, errResp.Message)
 		return
 	}
+}
+
+func applicationReplyEmail(req *dto.CreateTempApplicationRequest) *mail.Email {
+	email := mail.NewMSG()
+	email.SetFrom("noreply@cogio-ntnu.no").AddTo(req.Email).SetSubject("Thank you for your project application to Cogito NTNU!")
+
+	body := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.8; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+				.header { text-align: center; margin-bottom: 30px; font-size: 14px; }
+        .logo { max-width: 150px; height: auto; }
+        .content { background-color: #f9f9f9; padding: 25px; border-radius: 8px; }
+				.projects { background-color: #1e90ff; padding: 15px; border-radius: 5px; margin: 20px 0; color: #ffffff; }
+        .footer { text-align: center; margin-top: 30px; font-size: 14px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://cogito-ntnu.no/logo.png" alt="Cogito NTNU" class="logo">
+    </div>
+    <div class="content">
+        <p>Dear %s,</p>
+        <p>Thank you for applying to Cogito NTNU!</p>
+        <p>We've received your application and we will review it shortly after the deadline passes the <strong>6th of February</strong>.</p>
+        <div class="projects">
+            <strong>The projects you applied to:</strong><br>
+            %s
+        </div>
+        <p>Is something not quite right or do you have any questions? Please reply to styret@cogito-ntnu.no</p>
+        <p>Best regards,<br><strong>The Cogito NTNU Board</strong></p>
+    </div>
+    <div class="footer">
+		<p>This is an automatic reply. If you want to contact us, please use:</p>
+        <p>styret@cogito-ntnu.no</p>
+    </div>
+</body>
+</html>`, req.FirstName, strings.Join(req.Projects, "<br>"))
+	email.SetBody(mail.TextHTML, body)
+
+	return email
 }
