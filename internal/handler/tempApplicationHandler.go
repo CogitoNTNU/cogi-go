@@ -31,21 +31,15 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 	}
 
 	err := t.service.CreateTempApplication(t.ctx, &req)
-	gCtx.AbortWithStatusJSON(err.Code, err.Message)
 	if err != nil {
+		gCtx.AbortWithStatusJSON(err.Code, err.Message)
 		return
 	}
 
 	smtpClient := gCtx.MustGet("smtp_client").(*mail.SMTPClient)
 	email := applicationReplyEmail(&req)
 
-	if email.Error != nil {
-		gCtx.JSON(http.StatusInternalServerError, "Something went wrong when creating the reply email.")
-	}
-
-	if err := email.Send(smtpClient); err != nil {
-		gCtx.JSON(http.StatusInternalServerError, "Something went wrong when sending the reply email.")
-	}
+	email.Send(smtpClient)
 
 	gCtx.Status(http.StatusCreated)
 }
