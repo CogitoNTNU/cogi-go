@@ -17,9 +17,9 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
 	jwt "github.com/appleboy/gin-jwt/v3"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	gojwt "github.com/golang-jwt/jwt/v5"
+	"github.com/jmoiron/sqlx"
 	"github.com/mbndr/figlet4go"
 	"github.com/sirupsen/logrus"
 	healthcheck "github.com/tavsec/gin-healthcheck"
@@ -40,32 +40,24 @@ type Server struct {
 func InitServer() (*Server, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
+	// engine.RedirectTrailingSlash = false
+	// engine.RedirectFixedPath = false
 
-	// TODO: FIX HACKY CORS CONFIG
-	engine.RedirectTrailingSlash = false
-	engine.RedirectFixedPath = false
-	corscfg := cors.DefaultConfig()
-	corscfg.AllowOrigins = []string{"http://localhost:3000", "https://cogito-ntnu.no", "*"}
-	corscfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	corscfg.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
-	corscfg.AllowCredentials = true
-	corscfg.MaxAge = 12 * time.Hour
-	engine.Use(cors.New(corscfg))
-	// cors := cfg.CorsNew(e)
-	// envVal, err := e.Read("ENVIRONMENT")
-	// if err != nil {
-	// 	logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
-	// }
-	// if envVal == env.PROD {
-	// }
-	// engine.Use(cors)
+	cfg := config.LoadApiConfig()
+	e := env.Configure(".env")
+
+	cors := cfg.CorsNew()
+	envVal, err := e.Read("ENVIRONMENT")
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
+	}
+	if envVal == env.PROD {
+		engine.Use(cors)
+	}
 
 	ctx := context.Background()
 	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
 	defer cancel()
-
-	cfg := config.LoadApiConfig()
-	e := env.Configure(".env")
 
 	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
 
@@ -99,9 +91,9 @@ func (s *Server) Serve() {
 	s.Logger.Info("\n \n" + render + "\n \n")
 
 	s.Logger.WithTime(time.Now()).Info("Starting database...")
-	sqlxDb := db.ExportDb(s.db) // TODO: Inject sqlxDb into repositories which are then used by services -> handlers
+	sqlxDB := db.ExportDb(s.db) // TODO: Inject sqlxDb into repositories which are then used by services -> handlers
 	defer func() {
-		if err := sqlxDb.Close(); err != nil {
+		if err := sqlxDB.Close(); err != nil {
 			s.Logger.WithError(err).Error("Failed to close sqlx database connection")
 			return
 		}
@@ -116,42 +108,14 @@ func (s *Server) Serve() {
 	}
 
 	s.Logger.WithTime(time.Now()).Info("Registering routes...")
-
-	queryTimeoutLimit := time.Duration(5) * time.Second
-
-	// User endpoints
-	userRepository := userRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	userService := service.NewUserService(userRepository, s.Logger)
-	userHandler := handler.NewUserHandler(userService, s.Ctx)
-
-	// Project endpoints
-	projectRepository := projectRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	projectService := service.NewProjectService(projectRepository, s.Logger)
-	projectHandler := handler.NewProjectHandler(projectService, s.Ctx)
-
-	// Sponsor endpoints
-	sponsorRepository := sponsorRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	sponsorService := service.NewSponsorService(sponsorRepository, s.Logger)
-	sponsorHandler := handler.NewSponsorHandler(sponsorService, s.Ctx)
-
-	// Temp Member Application endpoints
-	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDb, queryTimeoutLimit, s.Logger)
-	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, s.Logger)
-	tempApplicationHandler := handler.NewTempApplicationHandler(templateApplicationService, s.Ctx, s.Env)
-
-	handlers := &routes.Handlers{
-		User:            userHandler,
-		Project:         projectHandler,
-		Sponsor:         sponsorHandler,
-		TempApplication: tempApplicationHandler,
-	}
+	handlers := routerHandlers(sqlxDB, s.Logger, s.Ctx, s.Env)
 
 	routes.RegisterPublicRoutes(s.engine, handlers)
 	routes.RegisterPrivateRoutes(s.engine, s.jwtMiddleware, handlers)
 	routes.RegisterAdminRoutes(s.engine)
 
-	s.Logger.WithContext(*s.Ctx).Info("Initialization Complete! \n")
 	err = s.engine.Run(fmt.Sprintf(":%d", s.cfg.MainPort))
+	s.Logger.WithContext(*s.Ctx).Info("Initialization Complete! \n")
 	if err != nil {
 		s.Logger.WithError(err).Error("Error serving on main port")
 		return
@@ -169,6 +133,34 @@ func initParams() *jwt.GinJWTMiddleware {
 				"user_id": data,
 			}
 		},
+	}
+}
+
+func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context, env *env.EnvConfig) *routes.Handlers {
+	queryTimeoutLimit := time.Duration(5) * time.Second
+	userRepository := userRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	userService := service.NewUserService(userRepository, logger)
+	userHandler := handler.NewUserHandler(userService, ctx)
+
+	projectRepository := projectRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	projectService := service.NewProjectService(projectRepository, logger)
+	projectHandler := handler.NewProjectHandler(projectService, ctx)
+
+	sponsorRepository := sponsorRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	sponsorService := service.NewSponsorService(sponsorRepository, logger)
+	sponsorHandler := handler.NewSponsorHandler(sponsorService, ctx)
+
+	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, logger)
+
+	// TODO: Inject env into gin
+	tempApplicationHandler := handler.NewTempApplicationHandler(templateApplicationService, ctx, env)
+
+	return &routes.Handlers{
+		User:            userHandler,
+		Project:         projectHandler,
+		Sponsor:         sponsorHandler,
+		TempApplication: tempApplicationHandler,
 	}
 }
 
