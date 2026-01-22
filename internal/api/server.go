@@ -52,14 +52,17 @@ func InitServer() (*Server, error) {
 
 	logger := logrus.New().WithField("app", cfg.AppName).WithContext(ctx)
 
-	cors := cfg.CorsNew()
-	envVal, err := e.Read("ENVIRONMENT")
-	if err != nil {
-		logger.Fatalf("Failed to read ENVIRONMENT from env")
-	}
-	if envVal == env.PROD {
-		engine.Use(cors)
-	}
+	// cors := cfg.CorsNew()
+	// envVal, err := e.Read("ENVIRONMENT")
+	// if err != nil {
+	// 	logger.Fatalf("Failed to read ENVIRONMENT from env")
+	// }
+	// if envVal == env.PROD {
+	// 	engine.Use(cors)
+	// }
+
+	// WARNING: THIS IS NOT IDEAL
+	engine.Use(CORSMiddleware())
 
 	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
 	defer cancel()
@@ -178,6 +181,21 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 func SMTPMiddleware(server *mail.SMTPServer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("smtp_server", server)
+		c.Next()
+	}
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+		c.Header("Access-Control-Allow-Headers", "*")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
 		c.Next()
 	}
 }
