@@ -1,8 +1,7 @@
-# COGI-GO!! The Cogito NTNU Web Backend
+# COGI-GO!!
+### The pragmatic backend for [COGITO NTNU](https://cogito-ntnu.no)
 
-Backend for [Cogito-NTNU](https://cogito-ntnu.no)
-
-<img src="./misc/img/cogi-go!!.png" width="400px;"/><br />
+<img src="./misc/img/cogi-go!!.png" width="900px;"/><br />
 
 ---
 
@@ -69,12 +68,15 @@ SMTP_PASSWORD=
 SMTP_ENCRYPTION=
 ```
 
-`SMTP_ENCRYPTION` is an ENUM that follows:\
-0 - No encryption\
-1 - DEPRECATED: Only SSL\
-2 - DEPRECATED: Only TLS\
-3 - SSLTLS\
+The config variable `SMTP_ENCRYPTION` is an ENUM that follows: 
+```
+0 - No encryption
+1 - DEPRECATED: Only SSL
+2 - DEPRECATED: Only TLS
+3 - SSLTLS
 4 - STARTTLS
+```
+
 
 ## Technologies Used
 
