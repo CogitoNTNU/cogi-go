@@ -2,7 +2,7 @@ type: http_request
 model: http_request
 id: rq_BT7899tci6
 createdAt: 2026-01-18T20:56:36.724717
-updatedAt: 2026-01-18T23:52:51.505415
+updatedAt: 2026-01-21T16:18:33.432001
 workspaceId: wk_rxdC9r7YRV
 folderId: fl_G5jfP9bvDh
 authentication: {}
@@ -12,9 +12,9 @@ body:
     {
       "FirstName": "Simon Sandvik",
       "LastName": "Lee",
-      "Email": "simonsandviklee@gmail.com",
+      "Email": "simon.lee@tibby.pet",
       "PhoneNumber": "48393554",
-      "Projects": ["Hello", "neighbour"],
+      "Projects": ["Make Sverre A Superstar", "ChessAI"],
       "ApplicationText": "Please let me in"
     }
 bodyType: application/json

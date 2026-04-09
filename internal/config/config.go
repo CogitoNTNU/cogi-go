@@ -1,7 +1,8 @@
 package config
 
 import (
-	"github.com/CogitoNTNU/cogi-go/internal/util/env"
+	"time"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
@@ -50,9 +51,14 @@ func (c *LocalDbConfig) loadDefault() (*LocalDbConfig, error) {
 	return c, nil
 }
 
-func (a *Api) CorsNew(e *env.EnvConfig) gin.HandlerFunc {
-	config := cors.DefaultConfig()
-	// WARNING: THIS IS A HACK, REMOVE
-	config.AllowOrigins = []string{"https://cogito-ntnu.no", "*"}
-	return cors.New(config)
+func (a *Api) CorsNew() gin.HandlerFunc {
+	// TODO: Make this a part of the env
+	corscfg := cors.DefaultConfig()
+	corscfg.AllowOrigins = []string{"http://localhost:3000", "https://cogito-ntnu.no"}
+	corscfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	corscfg.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	corscfg.AllowCredentials = true
+	corscfg.MaxAge = 12 * time.Hour
+
+	return cors.New(corscfg)
 }
