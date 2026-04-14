@@ -182,6 +182,13 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 	sponsorService := service.NewSponsorService(sponsorRepository, logger)
 	sponsorHandler := handler.NewSponsorHandler(sponsorService, ctx)
 
+	S3Client, err := service.GetS3Client(env, logger, *ctx)
+	if err != nil {
+		logger.Fatalf("Failed to initialize S3 client: %s", err.Error())
+	}
+	s3Service := service.NewS3Service(logger, env, S3Client)
+	s3Tester := handler.NewS3Tester(s3Service, ctx)
+
 	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
 	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, logger)
 
@@ -193,6 +200,7 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 		Project:         projectHandler,
 		Sponsor:         sponsorHandler,
 		TempApplication: tempApplicationHandler,
+		S3Tester:        s3Tester,
 	}
 }
 
