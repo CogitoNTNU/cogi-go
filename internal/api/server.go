@@ -19,6 +19,7 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
 	jwt "github.com/appleboy/gin-jwt/v3"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/jmoiron/sqlx"
