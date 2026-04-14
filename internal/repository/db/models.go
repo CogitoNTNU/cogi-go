@@ -293,3 +293,49 @@ func (ta *TempApplication) ToModel() *model.TempApplication {
 		CreatedAt:       ta.CreatedAt,
 	}
 }
+
+type Event struct {
+	Id           uuid.UUID       `db:"event_id"`
+	Name         string          `db:"name"`
+	StartAt      time.Time       `db:"start_at"`
+	EndAt        time.Time       `db:"end_at"`
+	CreatedAt    time.Time       `db:"created_at"`
+	UpdatedAt    time.Time       `db:"updated_at"`
+	Type         model.EventType `db:"type"`
+	Location     string          `db:"location"`
+	Description  string          `db:"description"`
+	Content      []byte          `db:"content"`
+	MaxAttendees int             `db:"max_atendees"`
+}
+
+type EventRegistration struct {
+	ID        uuid.UUID `db:"event_registration_id"`
+	EventId   uuid.UUID `db:"event_id"`
+	UserId    uuid.UUID `db:"user_id"`
+	CreatedAt time.Time `db:"created_at"`
+}
+
+func (er *EventRegistration) ToModel() *model.EventRegistration {
+	return &model.EventRegistration{
+		ID:        er.ID,
+		EventId:   er.EventId,
+		UserId:    er.UserId,
+		CreatedAt: er.CreatedAt,
+	}
+}
+
+func (e *Event) ToModel() *model.Event {
+	return &model.Event{
+		Id:           e.Id,
+		Name:         e.Name,
+		StartAt:      e.StartAt,
+		EndAt:        e.EndAt,
+		CreatedAt:    e.CreatedAt,
+		UpdatedAt:    e.UpdatedAt,
+		Type:         e.Type,
+		Location:     e.Location,
+		Description:  e.Description,
+		Content:      e.Content,
+		MaxAttendees: e.MaxAttendees,
+	}
+}
