@@ -12,6 +12,7 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/config"
 	"github.com/CogitoNTNU/cogi-go/internal/handler"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
+	eventRepository "github.com/CogitoNTNU/cogi-go/internal/repository/event"
 	projectRepository "github.com/CogitoNTNU/cogi-go/internal/repository/project"
 	sponsorRepository "github.com/CogitoNTNU/cogi-go/internal/repository/sponsor"
 	tempApplicationRepository "github.com/CogitoNTNU/cogi-go/internal/repository/tempApplication"
@@ -164,6 +165,10 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 	sponsorService := service.NewSponsorService(sponsorRepository, logger)
 	sponsorHandler := handler.NewSponsorHandler(sponsorService, ctx)
 
+	eventRepository := eventRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
+	eventService := service.NewEventService(eventRepository, logger)
+	eventHandler := handler.NewEventHandler(eventService, ctx)
+
 	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
 	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, logger)
 
@@ -175,6 +180,7 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 		Project:         projectHandler,
 		Sponsor:         sponsorHandler,
 		TempApplication: tempApplicationHandler,
+		Event:           eventHandler,
 	}
 }
 
