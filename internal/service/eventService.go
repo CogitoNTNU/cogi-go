@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/CogitoNTNU/cogi-go/internal/api/dto"
 	"github.com/CogitoNTNU/cogi-go/internal/model"
 	eventRepository "github.com/CogitoNTNU/cogi-go/internal/repository/event"
 	"github.com/google/uuid"
@@ -15,8 +16,8 @@ type Event struct {
 	repository *eventRepository.Repo
 }
 
-func NewEventService(eventRepository *eventRepository.Repo) *Event {
-	return &Event{repository: eventRepository}
+func NewEventService(eventRepository *eventRepository.Repo, logger *logrus.Entry) *Event {
+	return &Event{repository: eventRepository, logger: logger}
 }
 
 func (e *Event) GetAllEvents(ctx *context.Context) ([]model.Event, *model.ErrorResponse) {
@@ -48,4 +49,14 @@ func (e *Event) GetEventByID(ctx *context.Context, eventId string) (*model.Event
 	}
 
 	return event, nil
+}
+
+func (e *Event) CreateEvent(ctx *context.Context, req *dto.CreateEventRequest) *model.ErrorResponse {
+	err := e.repository.CreateEvent(ctx, req)
+	if err != nil {
+		e.logger.Errorf("Error creating event")
+		return err
+	}
+
+	return nil
 }
