@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/CogitoNTNU/cogi-go/internal/api/dto"
 	"github.com/CogitoNTNU/cogi-go/internal/model"
 	"github.com/CogitoNTNU/cogi-go/internal/repository/db"
 	"github.com/google/uuid"
@@ -66,7 +67,7 @@ func (r *Repo) GetEventByID(ctx *context.Context, eventId uuid.UUID) (*model.Eve
 
 	var eventResult db.Event
 	args := map[string]any{"eventId": eventId}
-	err := r.queries.Read.getEvent.SelectContext(cCtx, &eventResult, args)
+	err := r.queries.Read.getEvent.GetContext(cCtx, &eventResult, args)
 
 	if err != nil {
 		return nil, &model.ErrorResponse{
@@ -78,6 +79,37 @@ func (r *Repo) GetEventByID(ctx *context.Context, eventId uuid.UUID) (*model.Eve
 	event := eventResult.ToModel()
 
 	return event, nil
+}
+
+func (r *Repo) CreateEvent(ctx *context.Context, req *dto.CreateEventRequest) *model.ErrorResponse {
+	cCtx, cancel := context.WithTimeout(*ctx, r.queryTimeOutLimit)
+	defer cancel()
+
+	now := time.Now()
+
+	dbEvent := db.Event{
+		Id:           uuid.New(),
+		Name:         req.Name,
+		StartAt:      req.StartAt,
+		EndAt:        req.EndAt,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		Type:         req.Type,
+		Location:     req.Location,
+		Description:  req.Description,
+		Content:      req.Content,
+		MaxAttendees: req.MaxAttendees,
+	}
+
+	_, err := r.queries.Write.createEvent.ExecContext(cCtx, dbEvent)
+	if err != nil {
+		return &model.ErrorResponse{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		}
+	}
+
+	return nil
 }
 
 func (r *Repo) Close() (err error) {
