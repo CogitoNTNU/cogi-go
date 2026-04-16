@@ -11,6 +11,7 @@ type Handlers struct {
 	Project         *handler.Project
 	Sponsor         *handler.Sponsor
 	TempApplication *handler.TempApplication
+	Event           *handler.Event
 }
 
 func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
@@ -32,6 +33,13 @@ func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 	{
 		sponsors.GET("", handlers.Sponsor.GetAllSponsors)
 		sponsors.GET("/:id", handlers.Sponsor.GetSponsorByID)
+	}
+
+	events := api.Group("/events")
+	{
+		events.GET("", handlers.Event.GetAllEvents)
+		events.GET("/:eventId", handlers.Event.GetEventById)
+		events.POST("", handlers.Event.CreateEvent)
 	}
 
 	tempApplication := api.Group("/temp-member-application")
