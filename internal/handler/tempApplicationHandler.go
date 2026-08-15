@@ -15,6 +15,8 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
+const defaultApplicationDeadline = "2026-08-28T23:59:59+02:00"
+
 type TempApplication struct {
 	service *service.TempApplication
 	ctx     *context.Context
@@ -26,17 +28,22 @@ func NewTempApplicationHandler(tempApplicationService *service.TempApplication, 
 }
 
 func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
-	// Applications after the deadline are rejected server-side too — the
-	// frontend gate alone can be bypassed with a direct API call.
-	if deadlineStr, err := t.env.Read("APPLICATION_DEADLINE"); err == nil && deadlineStr != "" {
-		if deadline, parseErr := time.Parse(time.RFC3339, deadlineStr); parseErr == nil {
-			if time.Now().After(deadline) {
-				gCtx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "applications are closed"})
-				return
-			}
-		} else {
-			fmt.Printf("Invalid APPLICATION_DEADLINE %q: %v\n", deadlineStr, parseErr)
-		}
+	// Always enforce a deadline. Production may override the compiled Fall 2026
+	// value, but a missing environment variable must never leave intake open.
+	deadlineStr := defaultApplicationDeadline
+	if configuredDeadline, err := t.env.Read("APPLICATION_DEADLINE"); err == nil && configuredDeadline != "" {
+		deadlineStr = configuredDeadline
+	}
+
+	deadline, parseErr := time.Parse(time.RFC3339, deadlineStr)
+	if parseErr != nil {
+		fmt.Printf("Invalid APPLICATION_DEADLINE %q: %v\n", deadlineStr, parseErr)
+		gCtx.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "application intake is not configured"})
+		return
+	}
+	if time.Now().After(deadline) {
+		gCtx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "applications are closed"})
+		return
 	}
 
 	var req dto.CreateTempApplicationRequest
