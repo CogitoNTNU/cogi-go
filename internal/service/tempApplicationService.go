@@ -57,6 +57,14 @@ func (t *TempApplication) ExportTempApplicationsCSV(ctx *context.Context, respon
 	writer := csv.NewWriter(responseWriter)
 	defer writer.Flush()
 
+	header := []string{"FirstName", "LastName", "Email", "PhoneNumber", "Projects", "ApplicationText", "CreatedAt"}
+	if err := writer.Write(header); err != nil {
+		return &model.ErrorResponse{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		}
+	}
+
 	for _, record := range csvData {
 		if err := writer.Write(record); err != nil {
 			return &model.ErrorResponse{

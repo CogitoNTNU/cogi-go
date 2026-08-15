@@ -27,7 +27,10 @@ func NewTempApplicationHandler(tempApplicationService *service.TempApplication, 
 func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 	var req dto.CreateTempApplicationRequest
 	if err := gCtx.ShouldBindJSON(&req); err != nil {
+		// Missing return here used to let invalid/empty requests fall through
+		// and insert empty rows in the database.
 		gCtx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
 	}
 
 	err := t.service.CreateTempApplication(t.ctx, &req)
@@ -36,16 +39,17 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 		return
 	}
 
+	// The application is stored at this point — email failures must not fail
+	// the request, but they should be logged with the actual error.
 	smtpServer := gCtx.MustGet("smtp_server").(*mail.SMTPServer)
 	smtpClient, smtpErr := smtpServer.Connect()
 	if smtpErr != nil {
-		fmt.Printf("Could not connect to SMTP server: %v\n", err)
-	}
-
-	email := applicationReplyEmail(&req)
-
-	if err := email.Send(smtpClient); err != nil {
-		fmt.Printf("Could not send email to %s: %v\n", req.Email, err)
+		fmt.Printf("Could not connect to SMTP server: %v\n", smtpErr)
+	} else {
+		email := applicationReplyEmail(&req)
+		if sendErr := email.Send(smtpClient); sendErr != nil {
+			fmt.Printf("Could not send email to %s: %v\n", req.Email, sendErr)
+		}
 	}
 
 	gCtx.Status(http.StatusCreated)
@@ -95,7 +99,7 @@ func applicationReplyEmail(req *dto.CreateTempApplicationRequest) *mail.Email {
     <div class="content">
         <p>Dear %s,</p>
         <strong>Thank you for applying to Cogito NTNU!</strong>
-        <p>We've received your application and we will review it shortly after the deadline passes the <strong>6th of February</strong>.</p>
+        <p>We've received your application and we will review it shortly after the application deadline passes.</p>
         <div class="projects">
             <strong>The projects you applied to:</strong><br>
             %s<br><br> 
