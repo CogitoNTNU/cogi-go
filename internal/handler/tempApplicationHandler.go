@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/CogitoNTNU/cogi-go/internal/api/dto"
 	"github.com/CogitoNTNU/cogi-go/internal/service"
@@ -25,10 +26,25 @@ func NewTempApplicationHandler(tempApplicationService *service.TempApplication, 
 }
 
 func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
+	// Applications after the deadline are rejected server-side too — the
+	// frontend gate alone can be bypassed with a direct API call.
+	if deadlineStr, err := t.env.Read("APPLICATION_DEADLINE"); err == nil && deadlineStr != "" {
+		if deadline, parseErr := time.Parse(time.RFC3339, deadlineStr); parseErr == nil {
+			if time.Now().After(deadline) {
+				gCtx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "applications are closed"})
+				return
+			}
+		} else {
+			fmt.Printf("Invalid APPLICATION_DEADLINE %q: %v\n", deadlineStr, parseErr)
+		}
+	}
+
 	var req dto.CreateTempApplicationRequest
 	if err := gCtx.ShouldBindJSON(&req); err != nil {
 		// Missing return here used to let invalid/empty requests fall through
-		// and insert empty rows in the database.
+		// and insert empty rows in the database. Log rejections so an
+		// application is never lost without a trace on either side.
+		fmt.Printf("Rejected application payload from %s: %v\n", gCtx.ClientIP(), err)
 		gCtx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
