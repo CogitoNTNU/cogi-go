@@ -13,7 +13,7 @@ description: ''
 headers:
 - enabled: true
   name: X-Admin-Token
-  value: COGI-GO
+  value: <insert-real-admin-token>
   id: 4W0fkqCe2e
 - enabled: true
   name: ''
