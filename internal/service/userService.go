@@ -16,13 +16,13 @@ type User struct {
 }
 
 func NewUserService(userRepository *userRepository.Repo, logger *logrus.Entry) *User {
-	return &User{repository: userRepository}
+	return &User{repository: userRepository, logger: logger}
 }
 
 func (u *User) GetAllUsers(ctx *context.Context) ([]model.User, *model.ErrorResponse) {
 	allUsers, err := u.repository.GetAllUsers(ctx)
 	if err != nil {
-		u.logger.Errorf("An error has occured when retrieving all users. Error code: %s", err.Code)
+		u.logger.Errorf("An error has occured when retrieving all users. Error code: %d", err.Code)
 		return nil, err
 	}
 

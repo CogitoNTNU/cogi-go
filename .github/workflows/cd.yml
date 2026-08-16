@@ -28,12 +28,9 @@ jobs:
           push: true
           tags: ghcr.io/cogitontnu/cogi-go:latest
 
-      - name: Create .env file for compose
-        run: |
-          cat <<EOF > .env
-          ADMIN_TOKEN=${{ secrets.ADMIN_TOKEN }}
-          SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_PORT=${{ secrets.SMTP_PORT }}
-          SMTP_USER=${{ secrets.SMTP_USER }}
-          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
-          EOF
+      # The runner lives on the production VM, so the freshly built image is
+      # already in the local docker daemon. The compose file under
+      # /home/cogito-web-backend carries the real environment (secrets included),
+      # which is why no .env needs to be materialized here.
+      - name: Deploy backend
+        run: docker compose -f /home/cogito-web-backend/docker-compose.yml up -d
