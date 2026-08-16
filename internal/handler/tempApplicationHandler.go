@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"html"
 	"net/http"
 	"strings"
 	"time"
@@ -46,6 +47,10 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 		return
 	}
 
+	// A real application is a few KB — cap the body so the public endpoint
+	// can't be used to write multi-MB rows or relay huge emails.
+	gCtx.Request.Body = http.MaxBytesReader(gCtx.Writer, gCtx.Request.Body, 64<<10)
+
 	var req dto.CreateTempApplicationRequest
 	if err := gCtx.ShouldBindJSON(&req); err != nil {
 		// Missing return here used to let invalid/empty requests fall through
@@ -58,7 +63,10 @@ func (t *TempApplication) CreateTempApplication(gCtx *gin.Context) {
 
 	err := t.service.CreateTempApplication(t.ctx, &req)
 	if err != nil {
-		gCtx.AbortWithStatusJSON(err.Code, err.Message)
+		// err.Message can contain raw Postgres error text (schema/column names)
+		// — log it, but never forward internals to an unauthenticated caller.
+		fmt.Printf("Failed to store application from %s: %v\n", gCtx.ClientIP(), err.Message)
+		gCtx.AbortWithStatusJSON(err.Code, gin.H{"error": "could not store the application"})
 		return
 	}
 
@@ -98,7 +106,8 @@ func (t *TempApplication) ExportTempApplicationsCSV(gCtx *gin.Context) {
 
 	errResp := t.service.ExportTempApplicationsCSV(t.ctx, gCtx.Writer)
 	if errResp != nil {
-		gCtx.AbortWithStatusJSON(errResp.Code, errResp.Message)
+		fmt.Printf("CSV export failed: %v\n", errResp.Message)
+		gCtx.AbortWithStatusJSON(errResp.Code, gin.H{"error": "export failed"})
 		return
 	}
 }
@@ -137,8 +146,23 @@ func applicationReplyEmail(req *dto.CreateTempApplicationRequest) *mail.Email {
         <p>styret@cogito-ntnu.no</p>
     </div>
 </body>
-</html>`, req.FirstName, strings.Join(req.Projects, "<br>"), req.ApplicationText)
+</html>`, escapeForEmail(req.FirstName), strings.Join(escapeAllForEmail(req.Projects), "<br>"), escapeForEmail(req.ApplicationText))
 	email.SetBody(mail.TextHTML, body)
 
 	return email
+}
+
+// Applicant-supplied text goes into an HTML email sent from Cogito's official
+// address to an applicant-chosen recipient — without escaping, anyone could
+// make no-reply@cogito-ntnu.no deliver arbitrary HTML to any inbox.
+func escapeForEmail(value string) string {
+	return strings.ReplaceAll(html.EscapeString(value), "\n", "<br>")
+}
+
+func escapeAllForEmail(values []string) []string {
+	escaped := make([]string, len(values))
+	for i, value := range values {
+		escaped[i] = escapeForEmail(value)
+	}
+	return escaped
 }
