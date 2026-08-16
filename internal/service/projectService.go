@@ -22,7 +22,7 @@ func NewProjectService(projectRepository *projectRepository.Repo, logger *logrus
 func (p *Project) GetAllProjects(ctx *context.Context) ([]model.Project, *model.ErrorResponse) {
 	allProjects, err := p.repository.GetAllProjects(ctx)
 	if err != nil {
-		p.logger.Errorf("An error has occured when retrieving all projects. Error code: %s", err.Code)
+		p.logger.Errorf("An error has occured when retrieving all projects. Error code: %d", err.Code)
 		return nil, err
 	}
 
