@@ -11,6 +11,7 @@ type Handlers struct {
 	Project         *handler.Project
 	Sponsor         *handler.Sponsor
 	TempApplication *handler.TempApplication
+	S3Tester        *handler.S3Tester
 }
 
 func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
@@ -38,6 +39,13 @@ func RegisterPublicRoutes(router *gin.Engine, handlers *Handlers) {
 	{
 		tempApplication.POST("/", handlers.TempApplication.CreateTempApplication)
 		tempApplication.GET("/export-csv", handlers.TempApplication.ExportTempApplicationsCSV)
+	}
+
+	s3Tester := api.Group("/s3-tester")
+	{
+		s3Tester.POST("/upload", handlers.S3Tester.TestUpload)
+		s3Tester.POST("/upload-large", handlers.S3Tester.TestUploadLarge)
+		s3Tester.POST("/delete", handlers.S3Tester.TestDelete)
 	}
 }
 

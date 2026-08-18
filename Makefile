@@ -6,7 +6,7 @@ cogigo-prod:
 
 cogigo-dev:
 	docker compose down
-	rm .env; touch .env; echo ENVIRONMENT = "DEVELOPMENT" >> .env
+	#rm .env; touch .env; echo ENVIRONMENT = "DEVELOPMENT" >> .env
 	# Uncomment the following line to enable migrations
 	# go run cmd/migrations/main.go
 	docker compose up -d

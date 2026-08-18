@@ -19,6 +19,7 @@ import (
 	"github.com/CogitoNTNU/cogi-go/internal/service"
 	"github.com/CogitoNTNU/cogi-go/internal/util/env"
 	jwt "github.com/appleboy/gin-jwt/v3"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	gojwt "github.com/golang-jwt/jwt/v5"
 	"github.com/jmoiron/sqlx"
@@ -43,8 +44,25 @@ type Server struct {
 func InitServer() (*Server, error) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
-	// engine.RedirectTrailingSlash = false
-	// engine.RedirectFixedPath = false
+
+	// TODO: FIX HACKY CORS CONFIG
+	engine.RedirectTrailingSlash = false
+	engine.RedirectFixedPath = false
+	corscfg := cors.DefaultConfig()
+	corscfg.AllowOrigins = []string{"http://localhost:3000", "https://cogito-ntnu.no", "*"}
+	corscfg.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	corscfg.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	corscfg.AllowCredentials = true
+	corscfg.MaxAge = 12 * time.Hour
+	engine.Use(cors.New(corscfg))
+	// cors := cfg.CorsNew(e)
+	// envVal, err := e.Read("ENVIRONMENT")
+	// if err != nil {
+	// 	logrus.WithError(err).Fatal("Failed to read ENVIRONMENT from env")
+	// }
+	// if envVal == env.PROD {
+	// }
+	// engine.Use(cors)
 
 	ctx := context.Background()
 	cfg := config.LoadApiConfig()
@@ -164,6 +182,13 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 	sponsorService := service.NewSponsorService(sponsorRepository, logger)
 	sponsorHandler := handler.NewSponsorHandler(sponsorService, ctx)
 
+	S3Client, err := service.GetS3Client(env, logger, *ctx)
+	if err != nil {
+		logger.Fatalf("Failed to initialize S3 client: %s", err.Error())
+	}
+	s3Service := service.NewS3Service(logger, env, S3Client)
+	s3Tester := handler.NewS3Tester(s3Service, ctx)
+
 	tempApplicationRepository := tempApplicationRepository.NewRepo(sqlxDB, queryTimeoutLimit, logger)
 	templateApplicationService := service.NewTempApplicationService(tempApplicationRepository, logger)
 
@@ -175,6 +200,7 @@ func routerHandlers(sqlxDB *sqlx.DB, logger *logrus.Entry, ctx *context.Context,
 		Project:         projectHandler,
 		Sponsor:         sponsorHandler,
 		TempApplication: tempApplicationHandler,
+		S3Tester:        s3Tester,
 	}
 }
 
