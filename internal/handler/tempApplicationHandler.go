@@ -101,8 +101,15 @@ func (t *TempApplication) ExportTempApplicationsCSV(gCtx *gin.Context) {
 		return
 	}
 
-	gCtx.Header("Content-Type", "text/csv")
+	gCtx.Header("Content-Type", "text/csv; charset=utf-8")
 	gCtx.Header("Content-Disposition", "attachment; filename=member_applications.csv")
+
+	// UTF-8 BOM: without it, double-clicking the file in Excel on Windows
+	// decodes æ/ø/å as legacy ANSI and garbles every Norwegian name.
+	if _, err := gCtx.Writer.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
+		fmt.Printf("CSV export failed writing BOM: %v\n", err)
+		return
+	}
 
 	errResp := t.service.ExportTempApplicationsCSV(t.ctx, gCtx.Writer)
 	if errResp != nil {
