@@ -6,6 +6,12 @@ on:
 
   workflow_dispatch: {}
 
+# The runner is on the production VM, so two overlapping runs would race on
+# `docker compose up -d` for the same containers. Serialize deploys.
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on:
